@@ -100,9 +100,13 @@ typedef enum {
     OP_IN    = 0x1B,   /* Rd = MMIO[port]   (timer read)         */
     OP_OUT   = 0x1C,   /* MMIO[port] = Rs   (timer write)        */
 
+    /* Extended data movement */
+    OP_LOADB = 0x1D,   /* Rd = Memory[Rs]  — 8-bit byte load     */
+    OP_MOVW  = 0x1E,   /* Rd = 16-bit immediate (extra word)      */
+
 } Opcode;
 
-#define NUM_OPCODES  0x1D   /* total opcodes defined              */
+#define NUM_OPCODES  0x1F   /* total opcodes defined              */
 
 /* ------------------------------------------------------------
    Instruction encoding helpers
