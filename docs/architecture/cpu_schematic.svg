@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="720"
+     viewBox="0 0 980 720" font-family="monospace, 'Courier New', Courier">
+
+  <!-- ── Background ─────────────────────────────────────────── -->
+  <rect width="980" height="720" fill="#0d1117"/>
+
+  <!-- ── Title ─────────────────────────────────────────────── -->
+  <text x="490" y="28" text-anchor="middle" fill="#c9d1d9"
+        font-size="16" font-weight="bold">SoftCPU-C  —  16-bit Software CPU Microarchitecture</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CPU DIE boundary
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="14" y="40" width="952" height="480" rx="8"
+        fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="22" y="58" fill="#8b949e" font-size="11">CPU DIE</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FETCH PIPELINE  (left column)  x≈30..240
+  ════════════════════════════════════════════════════════════ -->
+
+  <!-- PC box -->
+  <rect x="30" y="75" width="140" height="52" rx="4"
+        fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+  <text x="100" y="96" text-anchor="middle" fill="#58a6ff"
+        font-size="13" font-weight="bold">PC</text>
+  <text x="100" y="114" text-anchor="middle" fill="#8b949e"
+        font-size="10">Program Counter</text>
+  <text x="100" y="126" text-anchor="middle" fill="#6e7681"
+        font-size="9">init = 0x2000</text>
+
+  <!-- PC → MAR arrow -->
+  <line x1="100" y1="127" x2="100" y2="162" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="108" y="148" fill="#58a6ff" font-size="9">addr</text>
+
+  <!-- MAR box -->
+  <rect x="30" y="162" width="140" height="46" rx="4"
+        fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+  <text x="100" y="182" text-anchor="middle" fill="#58a6ff"
+        font-size="13" font-weight="bold">MAR</text>
+  <text x="100" y="198" text-anchor="middle" fill="#8b949e"
+        font-size="10">Memory Address Reg</text>
+
+  <!-- MAR → MDR arrow -->
+  <line x1="100" y1="208" x2="100" y2="248" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="108" y="232" fill="#3fb950" font-size="9">data</text>
+
+  <!-- MDR box -->
+  <rect x="30" y="248" width="140" height="46" rx="4"
+        fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="100" y="268" text-anchor="middle" fill="#3fb950"
+        font-size="13" font-weight="bold">MDR</text>
+  <text x="100" y="284" text-anchor="middle" fill="#8b949e"
+        font-size="10">Memory Data Reg</text>
+
+  <!-- MDR → IR arrow -->
+  <line x1="100" y1="294" x2="100" y2="334" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)"/>
+  <text x="108" y="318" fill="#3fb950" font-size="9">instr</text>
+
+  <!-- IR box -->
+  <rect x="30" y="334" width="140" height="66" rx="4"
+        fill="#0d1117" stroke="#d29922" stroke-width="2"/>
+  <text x="100" y="355" text-anchor="middle" fill="#d29922"
+        font-size="13" font-weight="bold">IR</text>
+  <text x="100" y="372" text-anchor="middle" fill="#8b949e"
+        font-size="10">Instruction Register</text>
+  <text x="100" y="387" text-anchor="middle" fill="#6e7681"
+        font-size="9">[15:10] opcode</text>
+  <text x="100" y="397" text-anchor="middle" fill="#6e7681"
+        font-size="9">[9:8] mode  [7:6] dst  [5:0] src</text>
+
+  <!-- IR fields label -->
+  <rect x="30" y="334" width="140" height="66" rx="4"
+        fill="none" stroke="#d29922" stroke-width="2"/>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       CONTROL UNIT  (centre, top)  x≈240..550
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="240" y="75" width="290" height="180" rx="6"
+        fill="#0d1117" stroke="#d29922" stroke-width="2.5"/>
+  <text x="385" y="96" text-anchor="middle" fill="#d29922"
+        font-size="14" font-weight="bold">Control Unit</text>
+
+  <!-- F stage -->
+  <rect x="258" y="108" width="76" height="58" rx="4"
+        fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+  <text x="296" y="130" text-anchor="middle" fill="#d29922"
+        font-size="12" font-weight="bold">FETCH</text>
+  <text x="296" y="146" text-anchor="middle" fill="#8b949e" font-size="9">PC→MAR</text>
+  <text x="296" y="157" text-anchor="middle" fill="#8b949e" font-size="9">MDR←mem[MAR]</text>
+
+  <!-- F→D arrow -->
+  <line x1="334" y1="137" x2="354" y2="137" stroke="#d29922" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- D stage -->
+  <rect x="354" y="108" width="76" height="58" rx="4"
+        fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+  <text x="392" y="130" text-anchor="middle" fill="#d29922"
+        font-size="12" font-weight="bold">DECODE</text>
+  <text x="392" y="146" text-anchor="middle" fill="#8b949e" font-size="9">IR←MDR</text>
+  <text x="392" y="157" text-anchor="middle" fill="#8b949e" font-size="9">decode fields</text>
+
+  <!-- D→E arrow -->
+  <line x1="430" y1="137" x2="450" y2="137" stroke="#d29922" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- E stage -->
+  <rect x="450" y="108" width="62" height="58" rx="4"
+        fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+  <text x="481" y="130" text-anchor="middle" fill="#d29922"
+        font-size="12" font-weight="bold">EXEC</text>
+  <text x="481" y="146" text-anchor="middle" fill="#8b949e" font-size="9">ALU op</text>
+  <text x="481" y="157" text-anchor="middle" fill="#8b949e" font-size="9">writeback</text>
+
+  <!-- Opcode table inside CU -->
+  <text x="258" y="186" fill="#8b949e" font-size="8.5">Opcode decoder — 31 instructions  (6-bit, 0x00..0x1E)</text>
+  <text x="258" y="198" fill="#6e7681" font-size="8">NOP HALT MOV LOAD STORE  PUSH POP  ADD SUB MUL  INC DEC</text>
+  <text x="258" y="209" fill="#6e7681" font-size="8">AND OR XOR NOT  SHL SHR  CMP  JMP JZ JNZ JL JGE JC</text>
+  <text x="258" y="220" fill="#6e7681" font-size="8">CALL RET  IN OUT  LOADB MOVW</text>
+  <text x="258" y="234" fill="#6e7681" font-size="8">Modes: 00=REG  01=IMM(6b)  10=DIRECT(+word)  11=INDIR(reg)</text>
+  <text x="258" y="246" fill="#6e7681" font-size="8">Instruction format: [15:10]=op [9:8]=mode [7:6]=dst [5:0]=src/imm</text>
+
+  <!-- CU → IR control line -->
+  <line x1="240" y1="200" x2="172" y2="370" stroke="#d29922" stroke-width="1.5"
+        stroke-dasharray="5,3" marker-end="url(#arrowOrange)"/>
+  <text x="188" y="305" fill="#d29922" font-size="9" transform="rotate(-65,188,305)">ctrl decode</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       REGISTER FILE  (right-centre)  x≈565..750
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="565" y="75" width="185" height="200" rx="6"
+        fill="#0d1117" stroke="#bc8cff" stroke-width="2"/>
+  <text x="658" y="96" text-anchor="middle" fill="#bc8cff"
+        font-size="13" font-weight="bold">Register File</text>
+
+  <!-- R0 -->
+  <rect x="582" y="104" width="68" height="28" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+  <text x="616" y="122" text-anchor="middle" fill="#bc8cff" font-size="11">R0</text>
+  <text x="660" y="122" fill="#6e7681" font-size="9">arg1 / ret val</text>
+
+  <!-- R1 -->
+  <rect x="582" y="138" width="68" height="28" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+  <text x="616" y="157" text-anchor="middle" fill="#bc8cff" font-size="11">R1</text>
+  <text x="660" y="157" fill="#6e7681" font-size="9">arg2 / scratch</text>
+
+  <!-- R2 -->
+  <rect x="582" y="172" width="68" height="28" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+  <text x="616" y="191" text-anchor="middle" fill="#bc8cff" font-size="11">R2</text>
+  <text x="660" y="191" fill="#6e7681" font-size="9">arg3 / scratch</text>
+
+  <!-- R3 -->
+  <rect x="582" y="206" width="68" height="28" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+  <text x="616" y="225" text-anchor="middle" fill="#bc8cff" font-size="11">R3</text>
+  <text x="660" y="225" fill="#6e7681" font-size="9">frame pointer</text>
+
+  <!-- SP -->
+  <rect x="582" y="240" width="68" height="28" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1"/>
+  <text x="616" y="259" text-anchor="middle" fill="#bc8cff" font-size="11">SP</text>
+  <text x="660" y="259" fill="#6e7681" font-size="9">init=0x1FFF  ↓</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ALU  (right-bottom)  x≈565..750  y≈290..440
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="565" y="290" width="185" height="180" rx="6"
+        fill="#0d1117" stroke="#bc8cff" stroke-width="2"/>
+  <text x="658" y="311" text-anchor="middle" fill="#bc8cff"
+        font-size="13" font-weight="bold">ALU</text>
+  <text x="658" y="325" text-anchor="middle" fill="#8b949e"
+        font-size="9">Arithmetic &amp; Logic Unit</text>
+
+  <text x="580" y="344" fill="#6e7681" font-size="8.5">Arithmetic:  ADD  SUB  MUL  INC  DEC</text>
+  <text x="580" y="357" fill="#6e7681" font-size="8.5">Bitwise:     AND  OR   XOR  NOT</text>
+  <text x="580" y="370" fill="#6e7681" font-size="8.5">Shift:       SHL  SHR  (by immediate)</text>
+  <text x="580" y="383" fill="#6e7681" font-size="8.5">Compare:     CMP  (sets FLAGS only)</text>
+  <text x="580" y="396" fill="#6e7681" font-size="8.5">Transfer:    MOV  MOVW  LOAD  LOADB</text>
+  <text x="580" y="409" fill="#6e7681" font-size="8.5">Stack:       PUSH  POP  CALL  RET</text>
+  <text x="580" y="422" fill="#6e7681" font-size="8.5">I/O:         IN   OUT</text>
+  <text x="580" y="437" fill="#6e7681" font-size="8.5">Branch:      JMP JZ JNZ JL JGE JC</text>
+  <text x="580" y="456" fill="#6e7681" font-size="8.5">Result width: 16 bits  (wraps on overflow)</text>
+
+  <!-- RegFile ↔ ALU -->
+  <line x1="658" y1="275" x2="658" y2="290" stroke="#bc8cff" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <text x="666" y="285" fill="#bc8cff" font-size="9">operands</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       FLAGS register  x≈760..940  y≈75..145
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="770" y="75" width="180" height="145" rx="6"
+        fill="#0d1117" stroke="#f85149" stroke-width="2"/>
+  <text x="860" y="96" text-anchor="middle" fill="#f85149"
+        font-size="13" font-weight="bold">FLAGS</text>
+  <text x="860" y="110" text-anchor="middle" fill="#8b949e" font-size="9">Status Register</text>
+
+  <rect x="790" y="118" width="30" height="24" rx="3" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+  <text x="805" y="134" text-anchor="middle" fill="#f85149" font-size="11" font-weight="bold">Z</text>
+  <text x="830" y="134" fill="#8b949e" font-size="9">Zero flag</text>
+
+  <rect x="790" y="148" width="30" height="24" rx="3" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+  <text x="805" y="164" text-anchor="middle" fill="#f85149" font-size="11" font-weight="bold">N</text>
+  <text x="830" y="164" fill="#8b949e" font-size="9">Negative / Less flag</text>
+
+  <rect x="790" y="178" width="30" height="24" rx="3" fill="#161b22" stroke="#f85149" stroke-width="1.2"/>
+  <text x="805" y="194" text-anchor="middle" fill="#f85149" font-size="11" font-weight="bold">C</text>
+  <text x="830" y="194" fill="#8b949e" font-size="9">Carry flag</text>
+
+  <!-- ALU → FLAGS -->
+  <line x1="750" y1="340" x2="860" y2="220" stroke="#f85149" stroke-width="1.5"
+        stroke-dasharray="6,3" marker-end="url(#arrowRed)"/>
+  <text x="812" y="275" fill="#f85149" font-size="9" transform="rotate(-52,812,275)">set flags</text>
+
+  <!-- FLAGS → CU (branch feedback) -->
+  <line x1="770" y1="137" x2="530" y2="137" stroke="#f85149" stroke-width="1.5"
+        stroke-dasharray="6,3" marker-end="url(#arrowRed)"/>
+  <text x="648" y="130" fill="#f85149" font-size="9">branch condition</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MMIO block  x≈770..940  y≈260..450
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="770" y="265" width="180" height="235" rx="6"
+        fill="#0d1117" stroke="#39d353" stroke-width="2"/>
+  <text x="860" y="285" text-anchor="middle" fill="#39d353"
+        font-size="13" font-weight="bold">MMIO</text>
+  <text x="860" y="299" text-anchor="middle" fill="#8b949e" font-size="9">Memory-Mapped I/O</text>
+  <text x="860" y="311" text-anchor="middle" fill="#6e7681" font-size="8">0xF000 – 0xF0FF</text>
+
+  <rect x="787" y="320" width="146" height="28" rx="3" fill="#161b22" stroke="#39d353" stroke-width="1"/>
+  <text x="860" y="338" text-anchor="middle" fill="#39d353" font-size="10">0xF000  TIMER_COUNT (r)</text>
+
+  <rect x="787" y="354" width="146" height="28" rx="3" fill="#161b22" stroke="#39d353" stroke-width="1"/>
+  <text x="860" y="372" text-anchor="middle" fill="#39d353" font-size="10">0xF001  TIMER_CTRL  (w)</text>
+
+  <rect x="787" y="388" width="146" height="28" rx="3" fill="#161b22" stroke="#39d353" stroke-width="1"/>
+  <text x="860" y="406" text-anchor="middle" fill="#39d353" font-size="10">0xF002  STDOUT      (w)</text>
+
+  <rect x="787" y="422" width="146" height="28" rx="3" fill="#161b22" stroke="#39d353" stroke-width="1"/>
+  <text x="860" y="440" text-anchor="middle" fill="#39d353" font-size="10">0xF003  STDIN       (r)</text>
+
+  <text x="787" y="466" fill="#6e7681" font-size="8">IN/OUT instructions map here.</text>
+  <text x="787" y="477" fill="#6e7681" font-size="8">Timer increments each cpu_step().</text>
+
+  <!-- MMIO ↔ ALU bus -->
+  <line x1="770" y1="370" x2="750" y2="370" stroke="#39d353" stroke-width="1.5"
+        stroke-dasharray="4,3" marker-end="url(#arrowGreenDark)"/>
+  <text x="756" y="365" fill="#39d353" font-size="8">I/O</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ADDRESS BUS (horizontal, inside CPU)
+  ════════════════════════════════════════════════════════════ -->
+  <line x1="170" y1="186" x2="565" y2="186" stroke="#58a6ff" stroke-width="3"
+        stroke-dasharray="8,4"/>
+  <text x="360" y="180" fill="#58a6ff" font-size="10" font-weight="bold">ADDRESS BUS  (16-bit)</text>
+  <!-- arrow to RegFile -->
+  <line x1="565" y1="186" x2="565" y2="155" stroke="#58a6ff" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- DATA BUS (horizontal, inside CPU) -->
+  <line x1="170" y1="272" x2="565" y2="272" stroke="#3fb950" stroke-width="3"
+        stroke-dasharray="8,4"/>
+  <text x="360" y="266" fill="#3fb950" font-size="10" font-weight="bold">DATA BUS  (16-bit)</text>
+  <!-- arrow from MDR to bus -->
+  <line x1="170" y1="271" x2="170" y2="265" stroke="#3fb950" stroke-width="2"/>
+  <!-- arrow to ALU -->
+  <line x1="565" y1="272" x2="565" y2="330" stroke="#3fb950" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+  <!-- IR → CU control line horizontal -->
+  <line x1="170" y1="370" x2="240" y2="200" stroke="#d29922" stroke-width="1.5"
+        stroke-dasharray="5,3" marker-end="url(#arrowOrange)"/>
+
+  <!-- CU → PC update -->
+  <line x1="240" y1="120" x2="170" y2="101" stroke="#d29922" stroke-width="1.5"
+        stroke-dasharray="5,3" marker-end="url(#arrowOrange)"/>
+  <text x="192" y="107" fill="#d29922" font-size="9">PC+2 / branch</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MEMORY MAP STRIP  (bottom)
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="14" y="532" width="952" height="178" rx="8"
+        fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="490" y="552" text-anchor="middle" fill="#c9d1d9"
+        font-size="13" font-weight="bold">System Memory Map  (64 KB)</text>
+
+  <!-- Segments row -->
+  <!-- Data 0x0000-0x0FFF  width≈180 -->
+  <rect x="30" y="562" width="180" height="120" rx="5"
+        fill="#0d1117" stroke="#58a6ff" stroke-width="2"/>
+  <text x="120" y="584" text-anchor="middle" fill="#58a6ff"
+        font-size="12" font-weight="bold">DATA</text>
+  <text x="120" y="599" text-anchor="middle" fill="#8b949e" font-size="10">0x0000 – 0x0FFF</text>
+  <text x="120" y="613" text-anchor="middle" fill="#6e7681" font-size="9">4 KB  read/write</text>
+  <text x="120" y="627" text-anchor="middle" fill="#6e7681" font-size="9">global variables</text>
+  <text x="120" y="641" text-anchor="middle" fill="#6e7681" font-size="9">STORE targets</text>
+  <text x="120" y="655" text-anchor="middle" fill="#6e7681" font-size="9">timer samples here</text>
+  <text x="120" y="669" text-anchor="middle" fill="#58a6ff" font-size="9">← LOAD / STORE</text>
+
+  <!-- Stack 0x1000-0x1FFF  width≈180 -->
+  <rect x="222" y="562" width="180" height="120" rx="5"
+        fill="#0d1117" stroke="#3fb950" stroke-width="2"/>
+  <text x="312" y="584" text-anchor="middle" fill="#3fb950"
+        font-size="12" font-weight="bold">STACK</text>
+  <text x="312" y="599" text-anchor="middle" fill="#8b949e" font-size="10">0x1000 – 0x1FFF</text>
+  <text x="312" y="613" text-anchor="middle" fill="#6e7681" font-size="9">4 KB  read/write</text>
+  <text x="312" y="627" text-anchor="middle" fill="#6e7681" font-size="9">SP init = 0x1FFF ↓</text>
+  <text x="312" y="641" text-anchor="middle" fill="#6e7681" font-size="9">grows downward</text>
+  <text x="312" y="655" text-anchor="middle" fill="#6e7681" font-size="9">PUSH/POP/CALL/RET</text>
+  <text x="312" y="669" text-anchor="middle" fill="#3fb950" font-size="9">← SP register</text>
+
+  <!-- Code 0x2000-0xEFFF  width≈360 -->
+  <rect x="414" y="562" width="360" height="120" rx="5"
+        fill="#0d1117" stroke="#d29922" stroke-width="2"/>
+  <text x="594" y="584" text-anchor="middle" fill="#d29922"
+        font-size="12" font-weight="bold">CODE</text>
+  <text x="594" y="599" text-anchor="middle" fill="#8b949e" font-size="10">0x2000 – 0xEFFF</text>
+  <text x="594" y="613" text-anchor="middle" fill="#6e7681" font-size="9">52 KB  read-only at runtime</text>
+  <text x="594" y="627" text-anchor="middle" fill="#6e7681" font-size="9">PC initialises to 0x2000</text>
+  <text x="594" y="641" text-anchor="middle" fill="#6e7681" font-size="9">instructions + embedded strings</text>
+  <text x="594" y="655" text-anchor="middle" fill="#6e7681" font-size="9">hello.asm string at 0x2004</text>
+  <text x="594" y="669" text-anchor="middle" fill="#d29922" font-size="9">← PC / MAR / fetch path</text>
+
+  <!-- MMIO 0xF000-0xF0FF  width≈132 -->
+  <rect x="786" y="562" width="162" height="120" rx="5"
+        fill="#0d1117" stroke="#39d353" stroke-width="2"/>
+  <text x="867" y="584" text-anchor="middle" fill="#39d353"
+        font-size="12" font-weight="bold">MMIO</text>
+  <text x="867" y="599" text-anchor="middle" fill="#8b949e" font-size="10">0xF000 – 0xF0FF</text>
+  <text x="867" y="613" text-anchor="middle" fill="#6e7681" font-size="9">256 B  mapped ports</text>
+  <text x="867" y="627" text-anchor="middle" fill="#6e7681" font-size="9">timer / stdio</text>
+  <text x="867" y="641" text-anchor="middle" fill="#6e7681" font-size="9">IN reads, OUT writes</text>
+  <text x="867" y="655" text-anchor="middle" fill="#6e7681" font-size="9">intercept in mem layer</text>
+  <text x="867" y="669" text-anchor="middle" fill="#39d353" font-size="9">← IN / OUT</text>
+
+  <!-- Vertical bus down from CPU to memory strip -->
+  <line x1="100" y1="520" x2="100" y2="562" stroke="#58a6ff" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowBlue)"/>
+  <line x1="490" y1="520" x2="490" y2="562" stroke="#d29922" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrowOrange)"/>
+
+  <!-- PC arrow into Code segment -->
+  <text x="476" y="518" fill="#d29922" font-size="9">PC→Code fetch</text>
+  <text x="40" y="518" fill="#58a6ff" font-size="9">addr/data bus</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LEGEND  (bottom-right corner of CPU die)
+  ════════════════════════════════════════════════════════════ -->
+  <rect x="240" y="290" width="308" height="220" rx="5"
+        fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text x="394" y="312" text-anchor="middle" fill="#c9d1d9"
+        font-size="11" font-weight="bold">Signal Legend</text>
+
+  <!-- Address bus -->
+  <line x1="258" y1="330" x2="310" y2="330" stroke="#58a6ff" stroke-width="3"/>
+  <text x="318" y="334" fill="#58a6ff" font-size="10">Address Bus  (PC / MAR → mem)</text>
+
+  <!-- Data bus -->
+  <line x1="258" y1="352" x2="310" y2="352" stroke="#3fb950" stroke-width="3"/>
+  <text x="318" y="356" fill="#3fb950" font-size="10">Data Bus  (MDR / mem values)</text>
+
+  <!-- Control -->
+  <line x1="258" y1="374" x2="310" y2="374" stroke="#d29922" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="318" y="378" fill="#d29922" font-size="10">Control Signals  (CU decode)</text>
+
+  <!-- Branch -->
+  <line x1="258" y1="396" x2="310" y2="396" stroke="#f85149" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="318" y="400" fill="#f85149" font-size="10">Branch / Flags feedback</text>
+
+  <!-- RegFile/ALU -->
+  <line x1="258" y1="418" x2="310" y2="418" stroke="#bc8cff" stroke-width="2"/>
+  <text x="318" y="422" fill="#bc8cff" font-size="10">Register / ALU paths</text>
+
+  <!-- MMIO -->
+  <line x1="258" y1="440" x2="310" y2="440" stroke="#39d353" stroke-width="2" stroke-dasharray="4,3"/>
+  <text x="318" y="444" fill="#39d353" font-size="10">MMIO  (IN / OUT ports)</text>
+
+  <!-- Cycle note -->
+  <text x="258" y="466" fill="#8b949e" font-size="9">Cycle:  FETCH → DECODE → EXECUTE</text>
+  <text x="258" y="480" fill="#6e7681" font-size="9">Word size: 16-bit  |  Fixed 2-byte instr (MOVW=4)</text>
+  <text x="258" y="494" fill="#6e7681" font-size="9">Registers: R0–R3 general  |  SP stack pointer</text>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       Arrow marker definitions
+  ════════════════════════════════════════════════════════════ -->
+  <defs>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#58a6ff"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3fb950"/>
+    </marker>
+    <marker id="arrowGreenDark" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#39d353"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d29922"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#f85149"/>
+    </marker>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#bc8cff"/>
+    </marker>
+  </defs>
+
+</svg>
