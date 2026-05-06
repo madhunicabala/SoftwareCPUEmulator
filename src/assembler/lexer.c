@@ -44,6 +44,8 @@ static const MnemonicEntry mnemonic_table[] = {
     { "RET",   OP_RET,   0 },
     { "IN",    OP_IN,    2 },
     { "OUT",   OP_OUT,   2 },
+    { "LOADB", OP_LOADB, 2 },
+    { "MOVW",  OP_MOVW,  2 },
     { NULL,    0,        0 }
 };
 
@@ -221,6 +223,48 @@ int lex_line(const char *line, int line_num, ParsedLine *out) {
         }
     }
 
+    /* ── Directive detection (.string) ──────────────────────
+       Must run after label extraction so `msg: .string "..."` works.
+       The directive consumes the entire remaining line.          */
+    if (s[0] == '.') {
+        /* Extract directive name (uppercase) */
+        char dir[MAX_TOKEN_LEN];
+        int  di = 0;
+        while (di < MAX_TOKEN_LEN - 1 && s[di] && !isspace((unsigned char)s[di])) {
+            dir[di] = (char)toupper((unsigned char)s[di]);
+            di++;
+        }
+        dir[di] = '\0';
+
+        if (strcmp(dir, ".STRING") == 0) {
+            out->is_string_directive = 1;
+            /* Find opening quote */
+            char *q = strchr(s + di, '"');
+            if (q) {
+                q++;  /* skip opening quote */
+                int si = 0;
+                while (*q && *q != '"' && si < MAX_LINE_LEN - 2) {
+                    if (*q == '\\') {
+                        q++;
+                        switch (*q) {
+                            case 'n':  out->string_data[si++] = '\n'; break;
+                            case 't':  out->string_data[si++] = '\t'; break;
+                            case '\\': out->string_data[si++] = '\\'; break;
+                            case '"':  out->string_data[si++] = '"';  break;
+                            case '0':  out->string_data[si++] = '\0'; break;
+                            default:   out->string_data[si++] = *q;   break;
+                        }
+                    } else {
+                        out->string_data[si++] = *q;
+                    }
+                    q++;
+                }
+                out->string_data[si] = '\0';  /* null terminator */
+            }
+            return 0;  /* no instruction tokens on this line */
+        }
+    }
+
     /* Tokenise */
     char *p = s;
     int   tok_count = 0;
@@ -273,7 +317,7 @@ int lex_file(AsmContext *ctx, const char *source_path) {
 
         ParsedLine pl;
         int toks = lex_line(line, line_num, &pl);
-        if (pl.has_label || toks > 0)
+        if (pl.has_label || pl.is_string_directive || toks > 0)
             ctx->lines[parsed++] = pl;
     }
 

@@ -12,7 +12,8 @@ static const char *opcode_names[] = {
     "CMP",
     "JMP","JZ","JNZ","JL","JGE","JC",
     "CALL","RET",
-    "IN","OUT"
+    "IN","OUT",
+    "LOADB","MOVW"
 };
 
 static const char *reg_names[] = { "R0", "R1", "R2", "R3" };
@@ -346,6 +347,22 @@ void cpu_execute(CPU *cpu, uint16_t instr) {
             uint16_t port = mem_read_word(cpu->mem, cpu->pc);
             cpu->pc += INSTR_SIZE;
             mmio_write(cpu->mem, port, cpu->reg[dst]);
+            break;
+        }
+
+        /* ── Extended Data Movement ────────────────────── */
+        case OP_LOADB: {
+            /* Rd = mem_read_byte(reg[src]) — byte load via indirect register */
+            uint16_t addr = cpu->reg[INSTR_SRC(instr) & 0x03];
+            cpu->reg[dst] = (uint16_t)mem_read_byte(cpu->mem, addr);
+            break;
+        }
+
+        case OP_MOVW: {
+            /* Rd = 16-bit immediate from next instruction word */
+            uint16_t imm = mem_read_word(cpu->mem, cpu->pc);
+            cpu->pc += INSTR_SIZE;
+            cpu->reg[dst] = imm;
             break;
         }
 

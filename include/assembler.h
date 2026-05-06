@@ -85,6 +85,10 @@ typedef struct {
     int    token_count;
     int    has_label;            /* 1 if line starts with label: */
     char   label[MAX_LABEL_LEN]; /* label name if has_label      */
+
+    /* Directive support */
+    int    is_string_directive;       /* 1 if line is a .string directive */
+    char   string_data[MAX_LINE_LEN]; /* escape-processed string content  */
 } ParsedLine;
 
 /* ------------------------------------------------------------

@@ -31,17 +31,24 @@ static int  encode_instruction(AsmContext *ctx, ParsedLine *pl);
 static int  instruction_size(ParsedLine *pl);
 
 /* ------------------------------------------------------------
-   emit_word — append a 16-bit word to output buffer
-               little-endian (low byte first)
+   emit_byte — append one byte to output buffer
    ------------------------------------------------------------ */
-static void emit_word(AsmContext *ctx, uint16_t word) {
-    if (ctx->output_size + 2 > CODE_SEG_SIZE) {
+static void emit_byte(AsmContext *ctx, uint8_t byte_val) {
+    if (ctx->output_size + 1 > CODE_SEG_SIZE) {
         fprintf(stderr, "[ASM] Output exceeds code segment size\n");
         ctx->errors++;
         return;
     }
-    ctx->output[ctx->output_size++] = (uint8_t)(word & 0xFF);
-    ctx->output[ctx->output_size++] = (uint8_t)((word >> 8) & 0xFF);
+    ctx->output[ctx->output_size++] = byte_val;
+}
+
+/* ------------------------------------------------------------
+   emit_word — append a 16-bit word to output buffer
+               little-endian (low byte first)
+   ------------------------------------------------------------ */
+static void emit_word(AsmContext *ctx, uint16_t word) {
+    emit_byte(ctx, (uint8_t)(word & 0xFF));
+    emit_byte(ctx, (uint8_t)((word >> 8) & 0xFF));
 }
 
 /* ------------------------------------------------------------
@@ -59,7 +66,18 @@ static void emit_word(AsmContext *ctx, uint16_t word) {
    - LOAD/STORE with direct address:                 4 bytes
    - IN/OUT with port address:                       4 bytes
    ------------------------------------------------------------ */
+/* Returns byte size of a .string directive including null + alignment padding. */
+static int string_directive_size(ParsedLine *pl) {
+    int len = (int)strlen(pl->string_data) + 1;  /* chars + null byte */
+    if (len % 2 != 0) len++;                      /* pad to 16-bit boundary */
+    return len;
+}
+
 static int instruction_size(ParsedLine *pl) {
+    /* Directive pseudo-instructions */
+    if (pl->is_string_directive)
+        return string_directive_size(pl);
+
     if (pl->token_count == 0) return 0;
     if (pl->tokens[0].type != TOK_MNEMONIC) return 0;
 
@@ -76,10 +94,12 @@ static int instruction_size(ParsedLine *pl) {
         case OP_IN:  case OP_OUT:
             return 4;  /* instr word + port word     */
 
+        case OP_MOVW:
+            return 4;  /* instr word + 16-bit immediate word */
+
         case OP_LOAD: case OP_STORE:
             /* 4 bytes only if second operand is direct address */
             if (pl->token_count >= 2) {
-                /* find non-mnemonic, non-dst token */
                 for (int i = 1; i < pl->token_count; i++) {
                     if (pl->tokens[i].type == TOK_ADDR_DIRECT) return 4;
                 }
@@ -111,8 +131,10 @@ int asm_pass1(AsmContext *ctx) {
             }
         }
 
-        /* Advance address by this instruction's size */
-        if (pl->token_count > 0 && pl->tokens[0].type == TOK_MNEMONIC) {
+        /* Advance address by this instruction's (or directive's) size */
+        if (pl->is_string_directive) {
+            ctx->current_addr += (uint16_t)string_directive_size(pl);
+        } else if (pl->token_count > 0 && pl->tokens[0].type == TOK_MNEMONIC) {
             int size = instruction_size(pl);
             ctx->current_addr += (uint16_t)size;
         }
@@ -273,6 +295,39 @@ static int encode_instruction(AsmContext *ctx, ParsedLine *pl) {
         return 0;
     }
 
+    /* ── MOVW Rd, #imm16 / MOVW Rd, label ─────────────── */
+    if (op == OP_MOVW) {
+        uint16_t imm16 = 0;
+        if (tsrc->type == TOK_IMMEDIATE) {
+            imm16 = (uint16_t)tsrc->int_val;
+        } else if (tsrc->type == TOK_LABEL_REF) {
+            int found;
+            imm16 = sym_resolve(&ctx->symbols, tsrc->text, &found);
+            if (!found) {
+                asm_error(ctx, pl->line_num, "MOVW: undefined label '%s'", tsrc->text);
+                return -1;
+            }
+        } else if (tsrc->type == TOK_ADDR_DIRECT) {
+            imm16 = tsrc->addr_val;
+        } else {
+            asm_error(ctx, pl->line_num, "MOVW: expected #imm16 or label");
+            return -1;
+        }
+        emit_word(ctx, MAKE_INSTR(op, MODE_DIRECT, dst, 0));
+        emit_word(ctx, imm16);
+        return 0;
+    }
+
+    /* ── LOADB Rd, [Rs] ─────────────────────────────────── */
+    if (op == OP_LOADB) {
+        if (tsrc->type != TOK_ADDR_INDIR) {
+            asm_error(ctx, pl->line_num, "LOADB: requires [Rs] (indirect register) operand");
+            return -1;
+        }
+        emit_word(ctx, MAKE_INSTR(op, MODE_INDIRECT, dst, tsrc->reg_val));
+        return 0;
+    }
+
     /* ── General two-operand: ADD SUB MUL AND OR XOR CMP MOV SHL SHR ── */
     switch (tsrc->type) {
         case TOK_REGISTER:
@@ -327,7 +382,18 @@ int asm_pass2(AsmContext *ctx) {
     for (int i = 0; i < ctx->line_count; i++) {
         ParsedLine *pl = &ctx->lines[i];
 
-        if (pl->token_count > 0 && pl->tokens[0].type == TOK_MNEMONIC) {
+        if (pl->is_string_directive) {
+            /* Emit each character byte then null terminator */
+            int str_len = (int)strlen(pl->string_data);
+            for (int j = 0; j < str_len; j++)
+                emit_byte(ctx, (uint8_t)pl->string_data[j]);
+            emit_byte(ctx, 0x00);
+            int emitted = str_len + 1;
+            /* Pad to 16-bit boundary so subsequent instructions are aligned */
+            if (emitted % 2 != 0) { emit_byte(ctx, 0x00); emitted++; }
+            ctx->current_addr += (uint16_t)emitted;
+
+        } else if (pl->token_count > 0 && pl->tokens[0].type == TOK_MNEMONIC) {
             uint32_t before = ctx->output_size;
             if (encode_instruction(ctx, pl) != 0 && ctx->errors > 0)
                 return -1;
