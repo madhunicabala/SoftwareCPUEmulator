@@ -16,6 +16,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 - [Instruction Set](#instruction-set)
 - [Memory Map](#memory-map)
 - [Calling Convention](#calling-convention)
+- [Assembler](#assembler)
 - [Example Programs](#example-programs)
 - [Team](#team)
 
@@ -27,7 +28,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 
 | Component | Description |
 |-----------|-------------|
-| **ALU** |   Arithmetic and logic unit — handles ADD, SUB, MUL, AND, OR, XOR, shifts, and compare |
+| **ALU** | Arithmetic and logic unit — handles ADD, SUB, MUL, AND, OR, XOR, shifts, and compare |
 | **Registers** | 4 general-purpose (R0–R3) + PC, SP — all 16-bit |
 | **Control Unit** | Decodes the 16-bit instruction word and drives the ALU and memory |
 | **Memory** | Flat 64KB address space split into Data, Stack, Code, and MMIO segments |
@@ -67,7 +68,8 @@ SoftCPU-C/
 │   ├── isa.h            # Opcodes, registers, flags, memory map, encoding macros
 │   ├── cpu.h            # CPU struct — registers, PC, SP, flags, cycle count
 │   ├── memory.h         # Memory struct — 64KB array + MMIO state
-│   └── alu.h            # ALU result type and all operation signatures
+│   ├── alu.h            # ALU result type and all operation signatures
+│   └── assembler.h      # Token types, symbol table, assembler context, signatures
 │
 ├── src/
 │   ├── main.c           # Entry point — run / debug / dump commands
@@ -77,7 +79,7 @@ SoftCPU-C/
 │   │   └── alu.c        # All arithmetic and logic operations
 │   ├── assembler/
 │   │   ├── lexer.c      # Tokeniser — labels, mnemonics, registers, immediates
-│   │   └── assembler.c  # Encodes tokens to 16-bit binary, writes .bin file
+│   │   └── assembler.c  # Two-pass encoder — writes .bin file
 │   └── programs/
 │       ├── fibonacci.asm
 │       ├── factorial.asm
@@ -93,7 +95,8 @@ SoftCPU-C/
 │   ├── test_cpu.c       # Unit tests for fetch–decode–execute
 │   └── test_memory.c    # Unit tests for memory read/write and MMIO
 │
-├── build/               # Compiled binaries and .bin outputs (gitignored)
+├── bin/                 # Compiled binaries — gitignored
+├── build/               # Assembled .bin outputs — gitignored
 ├── Makefile
 └── README.md
 ```
@@ -117,22 +120,27 @@ No external libraries or dependencies.
 git clone https://github.com/YOUR_USERNAME/SoftCPU-C.git
 cd SoftCPU-C
 
-# Build everything
+# Build the emulator and assembler
 make
 
-# Assemble a program (Phase 2 — assembler coming soon)
-./bin/softcpu assemble src/programs/fibonacci.asm build/fib.bin
+# Assemble a program
+./bin/softasm src/programs/fibonacci.asm build/fib.bin
 
-# Run it
+# Run it on the emulator
 ./bin/softcpu run build/fib.bin
 
 # Step through it instruction by instruction
 ./bin/softcpu debug build/fib.bin
+
+# Run and dump memory + registers after HALT
+./bin/softcpu dump build/fib.bin
 ```
 
 ---
 
 ## Usage
+
+### Emulator — `softcpu`
 
 ```
 ./bin/softcpu run   <program.bin>     Run program until HALT
@@ -140,7 +148,7 @@ make
 ./bin/softcpu dump  <program.bin>     Run then dump memory and register state
 ```
 
-### Debug mode output example
+#### Debug mode output example
 
 ```
 0x2000: [0x08C1]  MOV     dst=R0  mode=1  src=0x01
@@ -149,6 +157,25 @@ make
   R0=0x0001 (    1)  R1=0x0000 (    0)  R2=0x0000 (    0)  R3=0x0000 (    0)
   FLAGS: Z=0 N=0 C=0 V=0
 >
+```
+
+### Assembler — `softasm`
+
+```
+./bin/softasm <source.asm> <output.bin>
+```
+
+#### Assembler output example
+
+```
+[ASM] Assembling src/programs/fibonacci.asm → build/fib.bin
+[ASM] Lexed 24 lines from src/programs/fibonacci.asm
+[ASM] Pass1: label 'loop' = 0x200A
+[ASM] Pass1: label 'done' = 0x2018
+[ASM] Pass 1 complete: 2 labels, 0 errors
+[ASM] Pass 2 complete: 32 bytes encoded, 0 errors
+[ASM] Wrote 32 bytes to build/fib.bin
+[ASM] Done. 32 bytes, 2 labels.
 ```
 
 ---
@@ -319,6 +346,52 @@ RET                  ; pop return address, jump back
 
 ---
 
+## Assembler
+
+The assembler (`softasm`) converts human-readable `.asm` source files into `.bin` machine code that the emulator can load and execute. It is implemented across three files.
+
+### How it works
+
+**`include/assembler.h`** defines all shared types — `Token`, `TokenType`, `ParsedLine`, `Symbol`, `SymbolTable`, and `AsmContext` — used by both the lexer and encoder.
+
+**`src/assembler/lexer.c`** handles lexing. It reads the `.asm` file line by line, strips comments, detects label definitions, and classifies each word into a typed `Token`: mnemonic, register, immediate, direct address, indirect address, or label reference.
+
+**`src/assembler/assembler.c`** runs the two passes:
+- **Pass 1** walks every `ParsedLine`, records each `label → address` into the symbol table, and advances an address counter by the correct instruction size so forward label references resolve correctly.
+- **Pass 2** encodes each instruction to a 16-bit binary word using the `MAKE_INSTR` macro from `isa.h`, appends an extra 16-bit address word for `DIRECT` mode instructions, and writes the final binary to a `.bin` file.
+
+### Assembly syntax
+
+```asm
+; This is a comment — ignored by the lexer
+
+        MOV  R0, #0         ; immediate: # prefix, range -32 to +31
+        MOV  R1, R2         ; register to register
+        LOAD R0, [0x0010]   ; direct memory address
+        LOAD R0, [R1]       ; indirect — address held in R1
+        STORE R0, [0x0010]  ; store register to memory address
+
+loop:                       ; label definition
+        INC  R0
+        CMP  R0, #10
+        JNZ  loop           ; label reference as jump target
+
+        OUT  [0xF002], R0   ; write character to MMIO STDOUT
+        HALT
+```
+
+### Two-word instructions
+
+These instructions emit two 16-bit words — the instruction word followed by a full 16-bit address word:
+
+| Instructions | Why |
+|---|---|
+| `JMP`, `JZ`, `JNZ`, `JL`, `JGE`, `JC`, `CALL` | Jump/call target needs full 16-bit address |
+| `LOAD Rd, [addr]` / `STORE Rs, [addr]` | Direct memory address |
+| `IN Rd, port` / `OUT port, Rs` | MMIO port address |
+
+---
+
 ## Example Programs
 
 | Program | File | Demonstrates |
@@ -326,7 +399,7 @@ RET                  ; pop return address, jump back
 | Fibonacci | `src/programs/fibonacci.asm` | Loops, ADD, CMP, JNZ |
 | Factorial | `src/programs/factorial.asm` | Recursion, CALL/RET, MUL, stack frames |
 | Timer | `src/programs/timer.asm` | MMIO OUT/IN, timer ports, polling loop |
-| String | `src/programs/string.asm` | LOAD/STORE byte, INC, MMIO STDOUT |
+| String | `src/programs/string.asm` | LOAD/STORE byte, INC, CMP, MMIO STDOUT |
 
 ---
 
@@ -335,6 +408,6 @@ RET                  ; pop return address, jump back
 | Member | Contribution |
 |--------|-------------|
 | | ISA design, Emulator (cpu.c, memory.c, alu.c) |
-| | Assembler (lexer.c, assembler.c) |
+| | Assembler (assembler.h, lexer.c, assembler.c) |
 | | Assembly programs (fibonacci, factorial, timer, string) |
 | | Tests, README, project report |
