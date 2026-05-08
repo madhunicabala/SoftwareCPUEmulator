@@ -1,4 +1,4 @@
-# SoftCPU-C Memory Map
+# Emu16 Memory Map
 
 Total address space: 64KB (0x0000 – 0xFFFF)
 

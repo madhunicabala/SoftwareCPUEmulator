@@ -1,4 +1,4 @@
-# SoftCPU-C
+# Emu16
 
 A 16-bit software CPU emulator written in C. Built from scratch — custom ISA, ALU, emulator, and assembler — to simulate how a real processor fetches, decodes, and executes instructions.
 
@@ -63,7 +63,7 @@ For `DIRECT` mode instructions that need a full 16-bit address, a second 16-bit 
 ## Project Structure
 
 ```
-SoftCPU-C/
+Emu16/
 ├── include/
 │   ├── isa.h            # Opcodes, registers, flags, memory map, encoding macros
 │   ├── cpu.h            # CPU struct — registers, PC, SP, flags, cycle count
@@ -117,35 +117,35 @@ No external libraries or dependencies.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/SoftCPU-C.git
-cd SoftCPU-C
+git clone https://github.com/YOUR_USERNAME/Emu16.git
+cd Emu16
 
 # Build the emulator and assembler
 make
 
 # Assemble a program
-./bin/softasm src/programs/fibonacci.asm build/fib.bin
+./bin/emu16asm src/programs/fibonacci.asm build/fib.bin
 
 # Run it on the emulator
-./bin/softcpu run build/fib.bin
+./bin/emu16 run build/fib.bin
 
 # Step through it instruction by instruction
-./bin/softcpu debug build/fib.bin
+./bin/emu16 debug build/fib.bin
 
 # Run and dump memory + registers after HALT
-./bin/softcpu dump build/fib.bin
+./bin/emu16 dump build/fib.bin
 ```
 
 ---
 
 ## Usage
 
-### Emulator — `softcpu`
+### Emulator — `emu16`
 
 ```
-./bin/softcpu run   <program.bin>     Run program until HALT
-./bin/softcpu debug <program.bin>     Step-by-step — press Enter to advance, q to quit
-./bin/softcpu dump  <program.bin>     Run then dump memory and register state
+./bin/emu16 run   <program.bin>     Run program until HALT
+./bin/emu16 debug <program.bin>     Step-by-step — press Enter to advance, q to quit
+./bin/emu16 dump  <program.bin>     Run then dump memory and register state
 ```
 
 #### Debug mode output example
@@ -159,10 +159,10 @@ make
 >
 ```
 
-### Assembler — `softasm`
+### Assembler — `emu16asm`
 
 ```
-./bin/softasm <source.asm> <output.bin>
+./bin/emu16asm <source.asm> <output.bin>
 ```
 
 #### Assembler output example
@@ -348,7 +348,7 @@ RET                  ; pop return address, jump back
 
 ## Assembler
 
-The assembler (`softasm`) converts human-readable `.asm` source files into `.bin` machine code that the emulator can load and execute. It is implemented across three files.
+The assembler (`emu16asm`) converts human-readable `.asm` source files into `.bin` machine code that the emulator can load and execute. It is implemented across three files.
 
 ### How it works
 

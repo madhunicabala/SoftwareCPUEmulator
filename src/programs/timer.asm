@@ -11,7 +11,7 @@
 ;
 ; After the loop the data segment [0x0000..0x0013] holds 10 sampled
 ; tick values (one 16-bit word per sample).  Run with:
-;   ./bin/softcpu dump build/timer.bin
+;   ./bin/emu16 dump build/timer.bin
 ; to see the samples in the memory dump.
 
         ; ── Start the hardware timer ─────────────────────

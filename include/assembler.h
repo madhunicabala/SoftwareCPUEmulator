@@ -5,7 +5,7 @@
 #include "isa.h"
 
 /* ============================================================
-   SoftCPU-C Assembler
+   Emu16 Assembler
    Converts .asm source files → .bin machine code
 
    Two-pass design:

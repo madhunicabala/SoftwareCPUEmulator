@@ -4,7 +4,7 @@
 #include "assembler.h"
 
 /* ============================================================
-   SoftCPU-C Assembler  —  Two-Pass Encoder
+   Emu16 Assembler  —  Two-Pass Encoder
    ============================================================
 
    PASS 1:  Scan all ParsedLines.
