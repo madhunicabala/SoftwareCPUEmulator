@@ -317,8 +317,12 @@ int lex_file(AsmContext *ctx, const char *source_path) {
 
         ParsedLine pl;
         int toks = lex_line(line, line_num, &pl);
-        if (pl.has_label || pl.is_string_directive || toks > 0)
+        if (pl.has_label || pl.is_string_directive || toks > 0) {
+            /* store stripped source text for source-map generation */
+            strncpy(pl.raw_text, line, MAX_LINE_LEN - 1);
+            pl.raw_text[MAX_LINE_LEN - 1] = '\0';
             ctx->lines[parsed++] = pl;
+        }
     }
 
     fclose(f);

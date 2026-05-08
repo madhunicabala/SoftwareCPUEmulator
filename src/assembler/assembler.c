@@ -121,6 +121,9 @@ int asm_pass1(AsmContext *ctx) {
     for (int i = 0; i < ctx->line_count; i++) {
         ParsedLine *pl = &ctx->lines[i];
 
+        /* Stamp this line's address before any advance */
+        pl->addr = ctx->current_addr;
+
         /* Record label at current address */
         if (pl->has_label) {
             if (sym_add(&ctx->symbols, pl->label, ctx->current_addr) != 0) {
@@ -427,6 +430,72 @@ int asm_write_bin(AsmContext *ctx, const char *out_path) {
 }
 
 /* ------------------------------------------------------------
+   asm_write_map — write JSON source map alongside the binary
+   Format:
+     {
+       "source": "path/to/prog.asm",
+       "symbols": [{"name":"LOOP","addr":"0x200A"}, ...],
+       "lines":   [{"addr":"0x2000","line":5,"text":"MOV R0, #0"}, ...]
+     }
+   ------------------------------------------------------------ */
+int asm_write_map(AsmContext *ctx, const char *source_path,
+                  const char *map_path) {
+    FILE *f = fopen(map_path, "w");
+    if (!f) {
+        fprintf(stderr, "[ASM] Cannot write map: %s\n", map_path);
+        return -1;
+    }
+
+    /* Helper: write a JSON-escaped string */
+#define JSON_STR(fp, s) do { \
+    const char *_p = (s); \
+    fputc('"', fp); \
+    for (; *_p; _p++) { \
+        if (*_p == '"' || *_p == '\\') fputc('\\', fp); \
+        if (*_p >= 0x20) fputc(*_p, fp); \
+    } \
+    fputc('"', fp); \
+} while(0)
+
+    fprintf(f, "{\n");
+    fprintf(f, "  \"source\": ");
+    JSON_STR(f, source_path);
+    fprintf(f, ",\n");
+
+    /* Symbols */
+    fprintf(f, "  \"symbols\": [\n");
+    for (int i = 0; i < ctx->symbols.count; i++) {
+        if (i) fprintf(f, ",\n");
+        fprintf(f, "    {\"name\":\"%s\",\"addr\":\"0x%04X\"}",
+                ctx->symbols.entries[i].name,
+                ctx->symbols.entries[i].address);
+    }
+    fprintf(f, "\n  ],\n");
+
+    /* Lines */
+    fprintf(f, "  \"lines\": [\n");
+    int first = 1;
+    for (int i = 0; i < ctx->line_count; i++) {
+        ParsedLine *pl = &ctx->lines[i];
+        /* Only emit lines that map to an instruction address */
+        if (pl->token_count == 0 && !pl->is_string_directive) continue;
+        if (!first) fprintf(f, ",\n");
+        first = 0;
+        fprintf(f, "    {\"addr\":\"0x%04X\",\"line\":%d,\"text\":",
+                pl->addr, pl->line_num);
+        JSON_STR(f, pl->raw_text);
+        fputc('}', f);
+    }
+    fprintf(f, "\n  ]\n}\n");
+
+#undef JSON_STR
+
+    fclose(f);
+    printf("[ASM] Wrote source map to %s\n", map_path);
+    return 0;
+}
+
+/* ------------------------------------------------------------
    assemble — top-level entry point
    ------------------------------------------------------------ */
 int assemble(const char *source_path, const char *out_path) {
@@ -435,10 +504,19 @@ int assemble(const char *source_path, const char *out_path) {
 
     printf("[ASM] Assembling %s → %s\n", source_path, out_path);
 
-    if (lex_file(&ctx, source_path) < 0)  return -1;
-    if (asm_pass1(&ctx) != 0)             return -1;
-    if (asm_pass2(&ctx) != 0)             return -1;
+    if (lex_file(&ctx, source_path) < 0)    return -1;
+    if (asm_pass1(&ctx) != 0)               return -1;
+    if (asm_pass2(&ctx) != 0)               return -1;
     if (asm_write_bin(&ctx, out_path) != 0) return -1;
+
+    /* Auto-generate source map: replace .bin extension with .map.json */
+    char map_path[512];
+    strncpy(map_path, out_path, sizeof(map_path) - 20);
+    map_path[sizeof(map_path) - 20] = '\0';
+    char *dot = strrchr(map_path, '.');
+    if (dot && strcmp(dot, ".bin") == 0) *dot = '\0';
+    strcat(map_path, ".map.json");
+    asm_write_map(&ctx, source_path, map_path);
 
     printf("[ASM] Done. %u bytes, %d labels.\n",
            ctx.output_size, ctx.symbols.count);

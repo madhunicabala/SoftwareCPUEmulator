@@ -89,6 +89,10 @@ typedef struct {
     /* Directive support */
     int    is_string_directive;       /* 1 if line is a .string directive */
     char   string_data[MAX_LINE_LEN]; /* escape-processed string content  */
+
+    /* Source map support */
+    uint16_t addr;                    /* code address assigned in pass 1  */
+    char     raw_text[MAX_LINE_LEN];  /* original source line (stripped)  */
 } ParsedLine;
 
 /* ------------------------------------------------------------
@@ -147,7 +151,12 @@ int  asm_pass2(AsmContext *ctx);
    Returns 0 on success, -1 on error */
 int  asm_write_bin(AsmContext *ctx, const char *out_path);
 
-/* Top-level: assemble source_path → out_path
+/* Write a JSON source map: address → {line, text}
+   Returns 0 on success, -1 on error */
+int  asm_write_map(AsmContext *ctx, const char *source_path,
+                   const char *map_path);
+
+/* Top-level: assemble source_path → out_path (also writes .map.json)
    Returns 0 on success, -1 on error */
 int  assemble(const char *source_path, const char *out_path);
 
