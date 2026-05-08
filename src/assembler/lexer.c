@@ -6,7 +6,7 @@
 #include "assembler.h"
 
 /* ============================================================
-   SoftCPU-C Lexer
+   Emu16 Lexer
    Reads .asm source text line by line and breaks each line
    into tokens that the assembler's two passes can process.
    ============================================================ */

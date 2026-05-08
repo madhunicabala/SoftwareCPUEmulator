@@ -1,8 +1,8 @@
 CC      = gcc
 CFLAGS  = -Wall -Wextra -std=c11 -g -Iinclude
 
-CPU_TARGET  = bin/softcpu
-ASM_TARGET  = bin/softasm
+CPU_TARGET  = bin/emu16
+ASM_TARGET  = bin/emu16asm
 
 CPU_SRCS = src/main.c \
            src/emulator/cpu.c \

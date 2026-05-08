@@ -1,8 +1,8 @@
-# SoftCPU-C Microarchitecture
+# Emu16 Microarchitecture
 
 ## Overview
 
-SoftCPU-C is a 16-bit software-emulated CPU with a fixed-width 2-byte (16-bit) instruction word, 4 general-purpose registers, a hardware stack, memory-mapped I/O, and a simple three-stage pipeline model: **Fetch → Decode → Execute**.
+Emu16 is a 16-bit software-emulated CPU with a fixed-width 2-byte (16-bit) instruction word, 4 general-purpose registers, a hardware stack, memory-mapped I/O, and a simple three-stage pipeline model: **Fetch → Decode → Execute**.
 
 ---
 

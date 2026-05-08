@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 /* ============================================================
-   SoftCPU-C  —  Instruction Set Architecture
+   Emu16  —  Instruction Set Architecture
    16-bit fixed-width instructions
    ============================================================
 

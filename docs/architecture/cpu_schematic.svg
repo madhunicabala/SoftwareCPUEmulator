@@ -7,7 +7,7 @@
 
   <!-- ── Title ─────────────────────────────────────────────── -->
   <text x="490" y="28" text-anchor="middle" fill="#c9d1d9"
-        font-size="16" font-weight="bold">SoftCPU-C  —  16-bit Software CPU Microarchitecture</text>
+        font-size="16" font-weight="bold">Emu16  —  16-bit Software CPU Microarchitecture</text>
 
   <!-- ═══════════════════════════════════════════════════════════
        CPU DIE boundary

@@ -1,4 +1,4 @@
-# SoftCPU-C Instruction Set Architecture
+# Emu16 Instruction Set Architecture
 
 ## Instruction Encoding (16-bit fixed width)
 
