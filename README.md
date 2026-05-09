@@ -535,6 +535,6 @@ Hello, SoftCPU!
 | Member | Contribution |
 |--------|-------------|
 | Madhunica Balasubramanian | ISA architecture, CPU design constraints, ISA design, emulator (cpu.c, memory.c, alu.c) |
-| Ekant | Assembler (assembler.h, lexer.c, assembler.c) |
-| Pratamesh | Assembly programs (fibonacci.asm, factorial.asm, timer.asm, string.asm) |
-| Siddant | Tests (test_alu.c, test_cpu.c, test_memory.c), README, project report |
+| Ekant Kapgate | Assembler (assembler.h, lexer.c, assembler.c) |
+| Prathamesh Ravindra Sawant| Assembly programs (fibonacci.asm, factorial.asm, timer.asm, string.asm) |
+| Siddhant Raje | Tests (test_alu.c, test_cpu.c, test_memory.c), README, project report |
