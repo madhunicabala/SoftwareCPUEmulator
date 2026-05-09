@@ -2,7 +2,7 @@
 
 A 16-bit software CPU emulator written in C. Built from scratch — custom ISA, ALU, emulator, and assembler — to simulate how a real processor fetches, decodes, and executes instructions.
 
-Demonstrates the full fetch–decode–execute cycle, memory segmentation, a flag register, memory-mapped I/O, and a calling convention with stack frames. Designed to run four programs: Fibonacci, Factorial (recursive), Timer, and String operations.
+Demonstrates the full fetch–decode–execute cycle, memory segmentation, a flag register, memory-mapped I/O, and a calling convention with stack frames. Runs four programs: Fibonacci, Factorial (recursive), Timer, and String output.
 
 ---
 
@@ -63,7 +63,7 @@ For `DIRECT` mode instructions that need a full 16-bit address, a second 16-bit 
 ## Project Structure
 
 ```
-Emu16/
+SoftwareCPUEmulator/
 ├── include/
 │   ├── isa.h            # Opcodes, registers, flags, memory map, encoding macros
 │   ├── cpu.h            # CPU struct — registers, PC, SP, flags, cycle count
@@ -117,23 +117,18 @@ No external libraries or dependencies.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/Emu16.git
-cd Emu16
+git clone https://github.com/madhunicabala/SoftwareCPUEmulator.git
+cd SoftwareCPUEmulator
 
 # Build the emulator and assembler
 make
 
-# Assemble a program
-./bin/emu16asm src/programs/fibonacci.asm build/fib.bin
+# Create output folder
+mkdir -p build
 
-# Run it on the emulator
-./bin/emu16 run build/fib.bin
-
-# Step through it instruction by instruction
-./bin/emu16 debug build/fib.bin
-
-# Run and dump memory + registers after HALT
-./bin/emu16 dump build/fib.bin
+# Assemble and run a program
+./bin/emu16asm src/programs/fibonacci.asm build/fibonacci.bin
+./bin/emu16 run build/fibonacci.bin
 ```
 
 ---
@@ -168,14 +163,14 @@ make
 #### Assembler output example
 
 ```
-[ASM] Assembling src/programs/fibonacci.asm → build/fib.bin
+[ASM] Assembling src/programs/fibonacci.asm → build/fibonacci.bin
 [ASM] Lexed 24 lines from src/programs/fibonacci.asm
 [ASM] Pass1: label 'loop' = 0x200A
 [ASM] Pass1: label 'done' = 0x2018
 [ASM] Pass 1 complete: 2 labels, 0 errors
-[ASM] Pass 2 complete: 32 bytes encoded, 0 errors
-[ASM] Wrote 32 bytes to build/fib.bin
-[ASM] Done. 32 bytes, 2 labels.
+[ASM] Pass 2 complete: 28 bytes encoded, 0 errors
+[ASM] Wrote 28 bytes to build/fibonacci.bin
+[ASM] Done. 28 bytes, 2 labels.
 ```
 
 ---
@@ -376,7 +371,7 @@ loop:                       ; label definition
         CMP  R0, #10
         JNZ  loop           ; label reference as jump target
 
-        OUT  [0xF002], R0   ; write character to MMIO STDOUT
+        OUT  R0, [0xF002]   ; write character to MMIO STDOUT
         HALT
 ```
 
@@ -388,18 +383,108 @@ These instructions emit two 16-bit words — the instruction word followed by a 
 |---|---|
 | `JMP`, `JZ`, `JNZ`, `JL`, `JGE`, `JC`, `CALL` | Jump/call target needs full 16-bit address |
 | `LOAD Rd, [addr]` / `STORE Rs, [addr]` | Direct memory address |
-| `IN Rd, port` / `OUT port, Rs` | MMIO port address |
+| `IN Rd, [port]` / `OUT Rd, [port]` | MMIO port address |
 
 ---
 
 ## Example Programs
 
-| Program | File | Demonstrates |
-|---------|------|-------------|
-| Fibonacci | `src/programs/fibonacci.asm` | Loops, ADD, CMP, JNZ |
-| Factorial | `src/programs/factorial.asm` | Recursion, CALL/RET, MUL, stack frames |
-| Timer | `src/programs/timer.asm` | MMIO OUT/IN, timer ports, polling loop |
-| String | `src/programs/string.asm` | LOAD/STORE byte, INC, CMP, MMIO STDOUT |
+All four programs have been assembled and verified on the emulator.
+
+### Fibonacci
+
+Computes the Fibonacci sequence iteratively up to the 10th term.
+
+```bash
+./bin/emu16asm src/programs/fibonacci.asm build/fibonacci.bin
+./bin/emu16 run build/fibonacci.bin
+```
+
+```
+[CPU] Loaded 28 bytes at 0x2000
+[CPU] HALT at cycle 84, PC=0x201A
+[CPU] Finished in 85 cycles
+
+=== CPU State (cycle 85) ===
+  PC=0x201C  SP=0x1FFF
+  R0=0x0037 (   55)    R1=0x0059 (   89)    R2=0x0000 (    0)    R3=0x0014 (   20)
+  FLAGS: Z=1 N=0 C=0 V=0
+```
+
+R0 = 55 = fib(10) ✅ &nbsp; R1 = 89 = fib(11) ✅
+
+---
+
+### Factorial
+
+Computes 5! recursively using CALL/RET and stack frames.
+
+```bash
+./bin/emu16asm src/programs/factorial.asm build/factorial.bin
+./bin/emu16 run build/factorial.bin
+```
+
+```
+[CPU] Loaded 36 bytes at 0x2000
+[CPU] HALT at cycle 42, PC=0x2006
+[CPU] Finished in 43 cycles
+
+=== CPU State (cycle 43) ===
+  PC=0x2008  SP=0x1FFF
+  R0=0x0078 (  120)    R1=0x0005 (    5)    R2=0x0000 (    0)    R3=0x0000 (    0)
+  FLAGS: Z=0 N=0 C=0 V=0
+```
+
+R0 = 120 = 5! ✅ &nbsp; Stack fully unwound (SP = 0x1FFF) ✅
+
+---
+
+### Timer
+
+Starts the MMIO timer, polls it in a loop for 20 ticks, reads the count back.
+
+```bash
+./bin/emu16asm src/programs/timer.asm build/timer.bin
+./bin/emu16 run build/timer.bin
+```
+
+```
+[CPU] Loaded 38 bytes at 0x2000
+[CPU] HALT at cycle 79, PC=0x2024
+[CPU] Finished in 80 cycles
+
+=== CPU State (cycle 80) ===
+  PC=0x2026  SP=0x1FFF
+  R0=0x0000 (    0)    R1=0x0014 (   20)    R2=0x0000 (    0)    R3=0x0000 (    0)
+  FLAGS: Z=1 N=0 C=0 V=0
+```
+
+R1 = 20 ticks counted ✅ &nbsp; Z=1 confirms loop exited cleanly ✅
+
+---
+
+### String
+
+Prints `Hello, SoftCPU!` character by character via MMIO STDOUT. Each ASCII value is built using SHL + ADD since the 6-bit immediate field is limited to −32 to +31.
+
+```bash
+./bin/emu16asm src/programs/string.asm build/string.bin
+./bin/emu16 run build/string.bin
+```
+
+```
+[CPU] Loaded 146 bytes at 0x2000
+Hello, SoftCPU!
+[CPU] HALT at cycle 56, PC=0x2090
+[CPU] Finished in 57 cycles
+
+=== CPU State (cycle 57) ===
+  PC=0x2092  SP=0x1FFF
+  R0=0x000A (   10)    R1=0x0000 (    0)    R2=0x0000 (    0)    R3=0x0000 (    0)
+  FLAGS: Z=0 N=0 C=0 V=0
+```
+
+`Hello, SoftCPU!` printed to terminal ✅ &nbsp; R0 = 10 = '\n' (last char written) ✅
 
 ---
 
@@ -407,7 +492,7 @@ These instructions emit two 16-bit words — the instruction word followed by a 
 
 | Member | Contribution |
 |--------|-------------|
-| | ISA design, Emulator (cpu.c, memory.c, alu.c) |
-| | Assembler (assembler.h, lexer.c, assembler.c) |
-| | Assembly programs (fibonacci, factorial, timer, string) |
-| | Tests, README, project report |
+| Madhunica Balasubramanian | ISA architecture, CPU design constraint, emulator (cpu.c, memory.c, alu.c) |
+| Ekant | Assembler (assembler.h, lexer.c, assembler.c), Validation of assembler |
+| Pratamesh | Assembly programs (fibonacci.asm, factorial.asm), Validation of each module |
+| Siddant | Assembly programs ( timer.asm, string.asm), Tests (test_alu.c, test_cpu.c, test_memory.c), README|
