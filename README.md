@@ -19,7 +19,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 - [Calling Convention](#calling-convention)
 - [Assembler](#assembler)
 - [Example Programs](#example-programs)
-- [Demo Video - FIBONACCI) (#demo-video)
+- [Demo Video - FIBONACCI)](#demo-video)
 - [Team](#team)
 
 ---
