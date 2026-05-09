@@ -19,6 +19,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 - [Calling Convention](#calling-convention)
 - [Assembler](#assembler)
 - [Example Programs](#example-programs)
+- [Demo Video - FIBONACCI) (#demo-video)
 - [Team](#team)
 
 ---
@@ -453,7 +454,7 @@ Computes the Fibonacci sequence iteratively up to the 10th term.
   FLAGS: Z=1 N=0 C=0 V=0
 ```
 
-R0 = 55 = fib(10) ✅ &nbsp; R1 = 89 = fib(11) ✅
+R0 = 55 = fib(10)  &nbsp; R1 = 89 = fib(11) 
 
 ---
 
@@ -477,7 +478,7 @@ Computes 5! recursively using CALL/RET and stack frames.
   FLAGS: Z=0 N=0 C=0 V=0
 ```
 
-R0 = 120 = 5! ✅ &nbsp; Stack fully unwound (SP = 0x1FFF) ✅
+R0 = 120 = 5!  &nbsp; Stack fully unwound (SP = 0x1FFF) 
 
 ---
 
@@ -501,7 +502,7 @@ Starts the MMIO timer, polls it in a loop for 20 ticks, reads the count back.
   FLAGS: Z=1 N=0 C=0 V=0
 ```
 
-R1 = 20 ticks counted ✅ &nbsp; Z=1 confirms loop exited cleanly ✅
+R1 = 20 ticks counted!  &nbsp; Z=1 confirms loop exited cleanly 
 
 ---
 
@@ -526,9 +527,12 @@ Hello, Emu16!
   FLAGS: Z=0 N=0 C=0 V=0
 ```
 
-`Hello, Emu16!` printed to terminal ✅ &nbsp; R0 = 10 = '\n' (last char written) ✅
+`Hello, Emu16!` printed to terminal! &nbsp; R0 = 10 = '\n' (last char written) 
 
 ---
+
+## Demo Video - Fibonacci Program
+https://drive.google.com/file/d/1QtM5ycDp4ezod9oRnGZtgOsxTnU_7PVH/view?usp=drive_link 
 
 ## Team
 
