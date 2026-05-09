@@ -1,72 +1,105 @@
 ; string.asm
-; Demonstrates string operations: store a string in the data segment,
-; walk it character by character, print each via MMIO STDOUT.
+; Prints "Hello, SoftCPU!\n" character by character via MMIO STDOUT.
 ;
-; What it does:
-;   1. Stores "Hello, SoftCPU!\n" in the data segment at 0x0000
-;   2. Loads each character one by one using indirect addressing
-;   3. Writes each character to MMIO STDOUT (0xF002)
-;   4. Stops when it hits the null terminator (0x00)
+; Problem: our 6-bit signed immediate only covers -32 to +31.
+; ASCII characters are 32-127, so we can't MOV R0, #72 directly.
 ;
-; Registers used:
-;   R0 — current character value
-;   R1 — current pointer address (walks through string)
-;   R2 — scratch / null check
+; Solution: build each character value using SHL + ADD:
+;   MOV R0, #18   ; load small base
+;   SHL R0, #2    ; shift left: 18 << 2 = 72
+;   ADD R0, #0    ; add remainder (none needed here)
+;   OUT [0xF002], R0   ; print it
+;
+; Registers:
+;   R0 — current character being built and printed
 ; ============================================================
 
-; ── Store string into data segment ──────────────────────────
-; "Hello, SoftCPU!\n\0"
-; We store each character as a word (16-bit) at consecutive
-; even addresses starting at 0x0000
+; 'H' = 72 = 18 << 2
+        MOV   R0, #18
+        SHL   R0, #2
+        OUT   R0, [0xF002]
 
-        MOV   R0, #72          ; 'H'
-        STORE R0, [0x0000]
-        MOV   R0, #101         ; 'e'
-        STORE R0, [0x0002]
-        MOV   R0, #108         ; 'l'
-        STORE R0, [0x0004]
-        MOV   R0, #108         ; 'l'
-        STORE R0, [0x0006]
-        MOV   R0, #111         ; 'o'
-        STORE R0, [0x0008]
-        MOV   R0, #44          ; ','
-        STORE R0, [0x000A]
-        MOV   R0, #32          ; ' '
-        STORE R0, [0x000C]
-        MOV   R0, #83          ; 'S'
-        STORE R0, [0x000E]
-        MOV   R0, #111         ; 'o'
-        STORE R0, [0x0010]
-        MOV   R0, #102         ; 'f'
-        STORE R0, [0x0012]
-        MOV   R0, #116         ; 't'
-        STORE R0, [0x0014]
-        MOV   R0, #67          ; 'C'
-        STORE R0, [0x0016]
-        MOV   R0, #80          ; 'P'
-        STORE R0, [0x0018]
-        MOV   R0, #85          ; 'U'
-        STORE R0, [0x001A]
-        MOV   R0, #33          ; '!'
-        STORE R0, [0x001C]
-        MOV   R0, #10          ; '\n'
-        STORE R0, [0x001E]
-        MOV   R0, #0           ; null terminator
-        STORE R0, [0x0020]
+; 'e' = 101 = 25 << 2 + 1
+        MOV   R0, #25
+        SHL   R0, #2
+        ADD   R0, #1
+        OUT   R0, [0xF002]
 
-; ── Set pointer R1 to start of string ───────────────────────
-        MOV   R1, #0           ; R1 = 0x0000 (start of data segment)
+; 'l' = 108 = 27 << 2
+        MOV   R0, #27
+        SHL   R0, #2
+        OUT   R0, [0xF002]
 
-; ── Print loop ───────────────────────────────────────────────
-print_loop:
-        LOAD  R0, [R1]         ; R0 = Memory[R1]  (load current char)
-        CMP   R0, #0           ; is it null terminator?
-        JZ    done             ; yes — stop
+; 'l' = 108 = 27 << 2
+        MOV   R0, #27
+        SHL   R0, #2
+        OUT   R0, [0xF002]
 
-        OUT   [0xF002], R0     ; write char to MMIO STDOUT
-        INC   R1               ; advance pointer by 1
-        INC   R1               ; (each word is 2 bytes, so +2)
-        JMP   print_loop       ; next character
+; 'o' = 111 = 27 << 2 + 3
+        MOV   R0, #27
+        SHL   R0, #2
+        ADD   R0, #3
+        OUT   R0, [0xF002]
 
-done:
+; ',' = 44 = 22 << 1
+        MOV   R0, #22
+        SHL   R0, #1
+        OUT   R0, [0xF002]
+
+; ' ' = 32 = 16 << 1
+        MOV   R0, #16
+        SHL   R0, #1
+        OUT   R0, [0xF002]
+
+; 'S' = 83 = 20 << 2 + 3
+        MOV   R0, #20
+        SHL   R0, #2
+        ADD   R0, #3
+        OUT   R0, [0xF002]
+
+; 'o' = 111 = 27 << 2 + 3
+        MOV   R0, #27
+        SHL   R0, #2
+        ADD   R0, #3
+        OUT   R0, [0xF002]
+
+; 'f' = 102 = 25 << 2 + 2
+        MOV   R0, #25
+        SHL   R0, #2
+        ADD   R0, #2
+        OUT   R0, [0xF002]
+
+; 't' = 116 = 29 << 2
+        MOV   R0, #29
+        SHL   R0, #2
+        OUT   R0, [0xF002]
+
+; 'C' = 67 = 16 << 2 + 3
+        MOV   R0, #16
+        SHL   R0, #2
+        ADD   R0, #3
+        OUT   R0, [0xF002]
+
+; 'P' = 80 = 20 << 2
+        MOV   R0, #20
+        SHL   R0, #2
+        OUT   R0, [0xF002]
+
+; 'U' = 85 = 21 << 2 + 1
+        MOV   R0, #21
+        SHL   R0, #2
+        ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; '!' = 33 = 16 << 1 + 1
+        MOV   R0, #16
+        SHL   R0, #1
+        ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; '\n' = 10 = 5 << 1
+        MOV   R0, #5
+        SHL   R0, #1
+        OUT   R0, [0xF002]
+
         HALT
