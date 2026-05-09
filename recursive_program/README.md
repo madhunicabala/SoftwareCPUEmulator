@@ -54,7 +54,7 @@ Expected output:
   FLAGS: Z=0 N=0 C=0 V=0
 ```
 
-R0 = 120 = 5! ✅ — Stack fully unwound (SP = 0x1FFF) ✅
+R0 = 120 = 5!  — Stack fully unwound (SP = 0x1FFF) 
 
 ### Step Through Execution (Debug Mode)
 
@@ -192,7 +192,7 @@ _start:  CALL factorial        → push ret_addr=0x2006
 └─ RET                        → pop 0x2006, jump back to _start
          SP=0x1FFF  stack: (empty — fully unwound)
 
-_start:  HALT  →  R0 = 120  ✅
+_start:  HALT  →  R0 = 120  
 ```
 
 ### Key Observations
