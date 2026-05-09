@@ -13,6 +13,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 - [Build Requirements](#build-requirements)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
+- [Trace Viewer](#trace-viewer)
 - [Instruction Set](#instruction-set)
 - [Memory Map](#memory-map)
 - [Calling Convention](#calling-convention)
@@ -72,7 +73,7 @@ SoftwareCPUEmulator/
 │   └── assembler.h      # Token types, symbol table, assembler context, signatures
 │
 ├── src/
-│   ├── main.c           # Entry point — run / debug / dump commands
+│   ├── main.c           # Entry point — run / debug / dump / trace commands
 │   ├── emulator/
 │   │   ├── cpu.c        # Fetch–decode–execute loop, stack ops, flag logic
 │   │   ├── memory.c     # Byte/word read-write, MMIO handler
@@ -83,9 +84,13 @@ SoftwareCPUEmulator/
 │   └── programs/
 │       ├── fibonacci.asm
 │       ├── factorial.asm
-│       ├── hello.asm
 │       ├── timer.asm
 │       └── string.asm
+│
+├── trace_viewer/        # Web-based execution trace visualiser
+│   ├── index.html       # Landing page — drop zone for trace.json and map.json
+│   ├── style.css        # Dark theme UI styling
+│   └── viewer.js        # Step-through logic — renders registers, flags, timeline
 │
 ├── docs/
 │   ├── ISA.md           # Full instruction set reference
@@ -96,13 +101,8 @@ SoftwareCPUEmulator/
 │   ├── test_cpu.c       # Unit tests for fetch–decode–execute
 │   └── test_memory.c    # Unit tests for memory read/write and MMIO
 │
-├── trace_viewer/
-│   ├── index.html       # Load screen + three-panel viewer layout
-│   ├── style.css        # Dark-navy / amber design
-│   └── viewer.js        # File loading, navigation, register diff, timeline canvas
-│
 ├── bin/                 # Compiled binaries — gitignored
-├── build/               # Assembled .bin outputs — gitignored
+├── build/               # Assembled .bin outputs and trace files — gitignored
 ├── Makefile
 └── README.md
 ```
@@ -144,10 +144,9 @@ mkdir -p build
 ### Emulator — `emu16`
 
 ```
-./bin/emu16 run   <program.bin>                  Run program until HALT
-./bin/emu16 debug <program.bin>                  Step-by-step — press Enter to advance, q to quit
-./bin/emu16 dump  <program.bin>                  Run then dump memory and register state
-./bin/emu16 trace <program.bin> [trace.json]     Run and record a per-cycle JSON trace
+./bin/emu16 run   <program.bin>     Run program until HALT
+./bin/emu16 debug <program.bin>     Step-by-step — press Enter to advance, q to quit
+./bin/emu16 dump  <program.bin>     Run then dump memory and register state
 ```
 
 #### Debug mode output example
@@ -182,9 +181,45 @@ mkdir -p build
 
 ---
 
+## Trace Viewer
+
+The trace viewer is a browser-based tool that lets you step through every CPU cycle visually — registers, flags, source line, and instruction detail — one clock at a time.
+
+### How to generate a trace
+
+```bash
+# Step 1 — assemble your program
+./bin/emu16asm src/programs/factorial.asm build/factorial.bin
+
+# Step 2 — run in trace mode (generates trace.json and map.json)
+./bin/emu16 trace build/factorial.bin
+```
+
+This produces two files in `build/`:
+- `trace.json` — full execution trace, one entry per CPU cycle
+- `map.json` — source map linking binary addresses back to assembly lines (optional)
+
+### How to open the viewer
+
+```bash
+open trace_viewer/index.html
+```
+
+The viewer opens in your browser. Drag and drop `build/trace.json` into the left drop zone, and optionally `build/map.json` into the right drop zone, then click **Open Viewer →**.
+
+### What you can see
+
+- Every register value (R0–R3, PC, SP) at each cycle
+- Flag state (Z, N, C, V) after each instruction
+- The current instruction being executed with its decoded fields
+- A timeline showing how the program progressed cycle by cycle
+- Source map overlay showing which assembly line corresponds to the current instruction
+
+---
+
 ## Instruction Set
 
-31 instructions across 7 categories. All opcodes are 6 bits wide, allowing up to 64 total instructions.
+29 instructions across 6 categories. All opcodes are 6 bits wide, allowing up to 64 total instructions.
 
 ### System
 
@@ -249,13 +284,6 @@ mkdir -p build
 |----------|--------|-----------|
 | IN | 0x1B | `Rd = MMIO[port]` — read from device |
 | OUT | 0x1C | `MMIO[port] = Rs` — write to device |
-
-### Extended Data Movement
-
-| Mnemonic | Opcode | Operation |
-|----------|--------|-----------|
-| LOADB | 0x1D | `Rd = Memory[Rs]` — load one byte (8-bit) from address in Rs |
-| MOVW | 0x1E | `Rd = imm16` — load a full 16-bit immediate or label address (4-byte instruction) |
 
 ### Flag Register
 
@@ -403,51 +431,6 @@ These instructions emit two 16-bit words — the instruction word followed by a 
 
 ## Example Programs
 
-| Program | File | Demonstrates |
-|---------|------|-------------|
-| Fibonacci | `src/programs/fibonacci.asm` | Loops, ADD, CMP, JNZ, PUSH/POP |
-| Factorial | `src/programs/factorial.asm` | Recursion, CALL/RET, MUL, stack frames |
-| Hello World | `src/programs/hello.asm` | `.string` directive, MOVW, LOADB, MMIO STDOUT |
-| Timer | `src/programs/timer.asm` | MMIO IN/OUT, timer polling, Fetch/Compute/Store cycle |
-| String Copy | `src/programs/string.asm` | Byte copy to data segment, LOADB, INC, MMIO STDOUT |
-
----
-
-## Trace Viewer
-
-A browser-based step-through debugger that lets you walk through every CPU cycle of any recorded execution.
-
-### Generate a trace
-
-```bash
-# Assemble the program (also auto-generates the source map)
-./bin/emu16asm src/programs/fibonacci.asm build/fib.bin
-
-# Run and record a per-cycle JSON trace
-./bin/emu16 trace build/fib.bin build/fib.trace.json
-# produces: build/fib.trace.json  (execution trace)
-#           build/fib.map.json    (source map — auto-generated by assembler)
-```
-
-### Open the viewer
-
-```bash
-open trace_viewer/index.html
-```
-
-Drop `fib.trace.json` and `fib.map.json` onto the two zones, then click **Open Viewer**.
-
-### Features
-
-| Panel | What it shows |
-|-------|---------------|
-| **Source** | Assembly source with the current instruction highlighted in amber |
-| **CPU State** | All registers (hex + decimal), flags as LED indicators, decoded instruction fields |
-| **Execution Log** | Every cycle in order — click any row to jump to it |
-| **Timeline** | Canvas bar chart at the bottom coloured by opcode category; click to seek |
-
-Keyboard shortcuts: `←` / `→` step one cycle, `Home` / `End` jump to first / last, or type a cycle number in the jump box and press Enter.
-=======
 All four programs have been assembled and verified on the emulator.
 
 ### Fibonacci
@@ -545,12 +528,13 @@ Hello, SoftCPU!
 
 `Hello, SoftCPU!` printed to terminal ✅ &nbsp; R0 = 10 = '\n' (last char written) ✅
 
+---
 
 ## Team
 
 | Member | Contribution |
 |--------|-------------|
-| Madhunica Balasubramanian | ISA architecture, CPU design constraint, emulator (cpu.c, memory.c, alu.c) |
-| Ekant | Assembler (assembler.h, lexer.c, assembler.c), Validation of assembler |
-| Pratamesh | Assembly programs (fibonacci.asm, factorial.asm), Validation of each module |
-| Siddant | Assembly programs ( timer.asm, string.asm), Tests (test_alu.c, test_cpu.c, test_memory.c), README|
+| Madhunica Balasubramanian | ISA architecture, CPU design constraints, ISA design, emulator (cpu.c, memory.c, alu.c) |
+| Ekant | Assembler (assembler.h, lexer.c, assembler.c) |
+| Pratamesh | Assembly programs (fibonacci.asm, factorial.asm, timer.asm, string.asm) |
+| Siddant | Tests (test_alu.c, test_cpu.c, test_memory.c), README, project report |
