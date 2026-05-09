@@ -172,8 +172,8 @@ To assemble and run the assembly version on the actual Emu16 CPU emulator:
 
 ```bash
 # From the repo root
-./bin/softasm src/programs/factorial.asm build/factorial.bin
-./bin/softcpu run build/factorial.bin
+./bin/emu16asm src/programs/factorial.asm build/factorial.bin
+./bin/emu16 run build/factorial.bin
 ```
 
 The emulator halts with `R0 = 120` — the same answer the C program prints.
