@@ -507,7 +507,7 @@ R1 = 20 ticks counted ✅ &nbsp; Z=1 confirms loop exited cleanly ✅
 
 ### String
 
-Prints `Hello, SoftCPU!` character by character via MMIO STDOUT. Each ASCII value is built using SHL + ADD since the 6-bit immediate field is limited to −32 to +31.
+Prints `Hello, Emu16!` character by character via MMIO STDOUT. Each ASCII value is built using SHL + ADD since the 6-bit immediate field is limited to −32 to +31.
 
 ```bash
 ./bin/emu16asm src/programs/string.asm build/string.bin
@@ -515,18 +515,18 @@ Prints `Hello, SoftCPU!` character by character via MMIO STDOUT. Each ASCII valu
 ```
 
 ```
-[CPU] Loaded 146 bytes at 0x2000
-Hello, SoftCPU!
-[CPU] HALT at cycle 56, PC=0x2090
-[CPU] Finished in 57 cycles
+[CPU] Loaded 128 bytes at 0x2000
+Hello, Emu16!
+[CPU] HALT at cycle 49, PC=0x207E
+[CPU] Finished in 50 cycles
 
-=== CPU State (cycle 57) ===
-  PC=0x2092  SP=0x1FFF
+=== CPU State (cycle 50) ===
+  PC=0x2080  SP=0x1FFF
   R0=0x000A (   10)    R1=0x0000 (    0)    R2=0x0000 (    0)    R3=0x0000 (    0)
   FLAGS: Z=0 N=0 C=0 V=0
 ```
 
-`Hello, SoftCPU!` printed to terminal ✅ &nbsp; R0 = 10 = '\n' (last char written) ✅
+`Hello, Emu16!` printed to terminal ✅ &nbsp; R0 = 10 = '\n' (last char written) ✅
 
 ---
 

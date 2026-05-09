@@ -1,5 +1,5 @@
 ; string.asm
-; Prints "Hello, SoftCPU!\n" character by character via MMIO STDOUT.
+; Prints "Hello, Emu16!\n" character by character via MMIO STDOUT.
 ;
 ; Problem: our 6-bit signed immediate only covers -32 to +31.
 ; ASCII characters are 32-127, so we can't MOV R0, #72 directly.
@@ -50,44 +50,33 @@
         SHL   R0, #1
         OUT   R0, [0xF002]
 
-; 'S' = 83 = 20 << 2 + 3
-        MOV   R0, #20
-        SHL   R0, #2
-        ADD   R0, #3
-        OUT   R0, [0xF002]
-
-; 'o' = 111 = 27 << 2 + 3
-        MOV   R0, #27
-        SHL   R0, #2
-        ADD   R0, #3
-        OUT   R0, [0xF002]
-
-; 'f' = 102 = 25 << 2 + 2
-        MOV   R0, #25
-        SHL   R0, #2
-        ADD   R0, #2
-        OUT   R0, [0xF002]
-
-; 't' = 116 = 29 << 2
-        MOV   R0, #29
-        SHL   R0, #2
-        OUT   R0, [0xF002]
-
-; 'C' = 67 = 16 << 2 + 3
-        MOV   R0, #16
-        SHL   R0, #2
-        ADD   R0, #3
-        OUT   R0, [0xF002]
-
-; 'P' = 80 = 20 << 2
-        MOV   R0, #20
-        SHL   R0, #2
-        OUT   R0, [0xF002]
-
-; 'U' = 85 = 21 << 2 + 1
-        MOV   R0, #21
+; 'E' = 69 = 17 << 2 + 1
+        MOV   R0, #17
         SHL   R0, #2
         ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; 'm' = 109 = 27 << 2 + 1
+        MOV   R0, #27
+        SHL   R0, #2
+        ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; 'u' = 117 = 29 << 2 + 1
+        MOV   R0, #29
+        SHL   R0, #2
+        ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; '1' = 49 = 12 << 2 + 1
+        MOV   R0, #12
+        SHL   R0, #2
+        ADD   R0, #1
+        OUT   R0, [0xF002]
+
+; '6' = 54 = 27 << 1
+        MOV   R0, #27
+        SHL   R0, #1
         OUT   R0, [0xF002]
 
 ; '!' = 33 = 16 << 1 + 1
