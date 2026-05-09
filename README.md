@@ -19,7 +19,7 @@ Demonstrates the full fetch–decode–execute cycle, memory segmentation, a fla
 - [Calling Convention](#calling-convention)
 - [Assembler](#assembler)
 - [Example Programs](#example-programs)
-- [Demo Video - FIBONACCI)](#demo-video)
+- [Demo Video — Fibonacci](#demo-video--fibonacci)
 - [Team](#team)
 
 ---
@@ -531,8 +531,8 @@ Hello, Emu16!
 
 ---
 
-## Demo Video - Fibonacci Program
-https://drive.google.com/file/d/1QtM5ycDp4ezod9oRnGZtgOsxTnU_7PVH/view?usp=drive_link 
+## Demo Video — Fibonacci
+[▶ Watch Demo on Google Drive](https://drive.google.com/file/d/1QtM5ycDp4ezod9oRnGZtgOsxTnU_7PVH/view?usp=drive_link) 
 
 ## Team
 
