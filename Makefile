@@ -7,7 +7,8 @@ ASM_TARGET  = bin/emu16asm
 CPU_SRCS = src/main.c \
            src/emulator/cpu.c \
            src/emulator/memory.c \
-           src/emulator/alu.c
+           src/emulator/alu.c \
+           src/emulator/trace.c
 
 ASM_SRCS = src/assembler/assembler.c \
            src/assembler/lexer.c

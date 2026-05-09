@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emu16 — Trace Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOAD SCREEN
+════════════════════════════════════════════════════════ -->
+<div id="load-screen">
+  <div class="load-card">
+
+    <div class="load-brand">
+      <div class="brand-hex">&#x2B22;</div>
+      <div class="brand-text">
+        <span class="brand-name">Emu16</span>
+        <span class="brand-sub">Trace Viewer</span>
+      </div>
+    </div>
+
+    <p class="load-desc">
+      Step through every CPU cycle — registers, flags, source, and instruction detail —
+      one clock at a time.
+    </p>
+
+    <div class="drop-zones">
+
+      <label class="drop-zone" id="zone-trace" for="input-trace">
+        <input type="file" id="input-trace" accept=".json" tabindex="-1">
+        <div class="dz-icon">&#x21BB;</div>
+        <div class="dz-primary">trace.json</div>
+        <div class="dz-secondary">Execution trace</div>
+        <div class="dz-status" id="status-trace">Drop file or click</div>
+      </label>
+
+      <div class="dz-connector">+</div>
+
+      <label class="drop-zone" id="zone-map" for="input-map">
+        <input type="file" id="input-map" accept=".json" tabindex="-1">
+        <div class="dz-icon">&#x2316;</div>
+        <div class="dz-primary">map.json</div>
+        <div class="dz-secondary">Source map (optional)</div>
+        <div class="dz-status" id="status-map">Drop file or click</div>
+      </label>
+
+    </div>
+
+    <button id="btn-open" class="open-btn" disabled>
+      <span>Open Viewer</span>
+      <span class="open-arrow">&#x2192;</span>
+    </button>
+
+    <div class="load-tip">
+      <span class="tip-label">Generate files</span>
+      <code>./bin/emu16asm prog.asm build/prog.bin</code>
+      <code>./bin/emu16 trace build/prog.bin</code>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN VIEWER
+════════════════════════════════════════════════════════ -->
+<div id="viewer" hidden>
+
+  <!-- Top bar -->
+  <header id="topbar">
+    <div class="tb-brand">
+      <span class="tb-hex">&#x2B22;</span>
+      <span class="tb-name">Emu16</span>
+    </div>
+    <div class="tb-src" id="tb-src">—</div>
+    <div class="tb-instr">
+      <span class="tb-op" id="tb-op">—</span>
+      <span class="tb-at">@</span>
+      <span class="tb-pc" id="tb-pc">0x0000</span>
+    </div>
+    <div class="tb-counter">
+      <span class="tb-clabel">cycle</span>
+      <span class="tb-cnum" id="tb-cnum">—</span>
+      <span class="tb-csep">/</span>
+      <span class="tb-ctot" id="tb-ctot">—</span>
+    </div>
+  </header>
+
+  <!-- Three-panel body -->
+  <div id="body">
+
+    <!-- LEFT: Source / disassembly -->
+    <section class="panel" id="panel-source">
+      <div class="panel-hdr">
+        <span class="phdr-title">SOURCE</span>
+        <span class="phdr-meta" id="src-fname">no map loaded</span>
+      </div>
+      <div class="panel-scroll" id="source-scroll">
+        <div id="source-lines"></div>
+      </div>
+    </section>
+
+    <!-- CENTRE: CPU state -->
+    <section class="panel" id="panel-cpu">
+      <div class="panel-hdr">
+        <span class="phdr-title">CPU STATE</span>
+      </div>
+      <div class="panel-scroll cpu-inner">
+
+        <!-- Registers -->
+        <div class="cpu-group">
+          <div class="cg-label">General Purpose</div>
+          <div class="reg-table">
+            <div class="reg-row" id="rrow-0">
+              <span class="rname">R0</span>
+              <span class="rval" id="rval-0">0x0000</span>
+              <span class="rdec" id="rdec-0">0</span>
+            </div>
+            <div class="reg-row" id="rrow-1">
+              <span class="rname">R1</span>
+              <span class="rval" id="rval-1">0x0000</span>
+              <span class="rdec" id="rdec-1">0</span>
+            </div>
+            <div class="reg-row" id="rrow-2">
+              <span class="rname">R2</span>
+              <span class="rval" id="rval-2">0x0000</span>
+              <span class="rdec" id="rdec-2">0</span>
+            </div>
+            <div class="reg-row" id="rrow-3">
+              <span class="rname">R3</span>
+              <span class="rval" id="rval-3">0x0000</span>
+              <span class="rdec" id="rdec-3">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Special -->
+        <div class="cpu-group">
+          <div class="cg-label">Special</div>
+          <div class="reg-table">
+            <div class="reg-row">
+              <span class="rname rname-sp">PC</span>
+              <span class="rval rval-addr" id="sv-pc">0x0000</span>
+            </div>
+            <div class="reg-row">
+              <span class="rname rname-sp">SP</span>
+              <span class="rval rval-addr" id="sv-sp">0x0000</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flags -->
+        <div class="cpu-group">
+          <div class="cg-label">Flags</div>
+          <div class="flags-strip">
+            <div class="flag" id="fl-Z"><div class="fl-led"></div><div class="fl-name">Z</div><div class="fl-desc">Zero</div></div>
+            <div class="flag" id="fl-N"><div class="fl-led"></div><div class="fl-name">N</div><div class="fl-desc">Neg</div></div>
+            <div class="flag" id="fl-C"><div class="fl-led"></div><div class="fl-name">C</div><div class="fl-desc">Carry</div></div>
+            <div class="flag" id="fl-V"><div class="fl-led"></div><div class="fl-name">V</div><div class="fl-desc">Over</div></div>
+          </div>
+        </div>
+
+        <!-- Current instruction -->
+        <div class="cpu-group">
+          <div class="cg-label">Instruction</div>
+          <div class="instr-card">
+            <div class="ic-op" id="ic-op">—</div>
+            <div class="ic-fields">
+              <span class="ic-field" id="icf-mode">mode: —</span>
+              <span class="ic-field" id="icf-dst">dst: —</span>
+              <span class="ic-field" id="icf-src">src: —</span>
+            </div>
+            <div class="ic-raw" id="ic-raw">0x0000</div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- RIGHT: Execution log -->
+    <section class="panel" id="panel-log">
+      <div class="panel-hdr">
+        <span class="phdr-title">EXECUTION LOG</span>
+        <input id="jump-input" class="jump-input" type="number"
+               placeholder="jump to cycle…" min="1">
+      </div>
+      <div class="panel-scroll" id="log-scroll">
+        <div id="log-rows"></div>
+      </div>
+    </section>
+
+  </div><!-- /#body -->
+
+  <!-- Controls bar -->
+  <div id="controls">
+    <div class="ctl-nav">
+      <button class="nav-btn" id="btn-first" title="First (Home)">&#x23EE;</button>
+      <button class="nav-btn" id="btn-prev"  title="Prev (←)">&#x25C0;</button>
+      <button class="nav-btn" id="btn-next"  title="Next (→)">&#x25B6;</button>
+      <button class="nav-btn" id="btn-last"  title="Last (End)">&#x23ED;</button>
+    </div>
+    <div class="ctl-pos" id="ctl-pos">cycle 1 / —</div>
+    <div class="ctl-legend">
+      <span class="leg" style="--lc:#3b82f6">data</span>
+      <span class="leg" style="--lc:#10b981">arith</span>
+      <span class="leg" style="--lc:#8b5cf6">logic</span>
+      <span class="leg" style="--lc:#eab308">cmp</span>
+      <span class="leg" style="--lc:#f59e0b">jump</span>
+      <span class="leg" style="--lc:#ef4444">call</span>
+      <span class="leg" style="--lc:#06b6d4">i/o</span>
+      <span class="leg" style="--lc:#6b7280">sys</span>
+    </div>
+    <div class="ctl-keys">← → &nbsp;·&nbsp; Home / End &nbsp;·&nbsp; click timeline</div>
+  </div>
+
+  <!-- Timeline -->
+  <div id="timeline-wrap">
+    <canvas id="timeline-canvas"></canvas>
+  </div>
+
+</div><!-- /#viewer -->
+
+<script src="viewer.js"></script>
+</body>
+</html>
