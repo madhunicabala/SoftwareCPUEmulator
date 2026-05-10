@@ -86,6 +86,7 @@
       <span class="tb-csep">/</span>
       <span class="tb-ctot" id="tb-ctot">—</span>
     </div>
+    <button id="btn-reload" class="tb-reload" title="Back to load screen">&#x21BA; New</button>
   </header>
 
   <!-- Three-panel body -->
@@ -107,84 +108,93 @@
       <div class="panel-hdr">
         <span class="phdr-title">CPU STATE</span>
       </div>
-      <div class="panel-scroll cpu-inner">
+      <div class="panel-scroll">
+        <div class="cpu-inner">
 
-        <!-- Registers -->
-        <div class="cpu-group">
-          <div class="cg-label">General Purpose</div>
-          <div class="reg-table">
-            <div class="reg-row" id="rrow-0">
-              <span class="rname">R0</span>
-              <span class="rval" id="rval-0">0x0000</span>
-              <span class="rdec" id="rdec-0">0</span>
-            </div>
-            <div class="reg-row" id="rrow-1">
-              <span class="rname">R1</span>
-              <span class="rval" id="rval-1">0x0000</span>
-              <span class="rdec" id="rdec-1">0</span>
-            </div>
-            <div class="reg-row" id="rrow-2">
-              <span class="rname">R2</span>
-              <span class="rval" id="rval-2">0x0000</span>
-              <span class="rdec" id="rdec-2">0</span>
-            </div>
-            <div class="reg-row" id="rrow-3">
-              <span class="rname">R3</span>
-              <span class="rval" id="rval-3">0x0000</span>
-              <span class="rdec" id="rdec-3">0</span>
+          <!-- Registers -->
+          <div class="cpu-group">
+            <div class="cg-label">General Purpose</div>
+            <div class="reg-table">
+              <div class="reg-row" id="rrow-0">
+                <span class="rname">R0</span>
+                <span class="rval" id="rval-0">0x0000</span>
+                <span class="rdec" id="rdec-0">0</span>
+                <span class="rdiff" id="rdiff-0"></span>
+              </div>
+              <div class="reg-row" id="rrow-1">
+                <span class="rname">R1</span>
+                <span class="rval" id="rval-1">0x0000</span>
+                <span class="rdec" id="rdec-1">0</span>
+                <span class="rdiff" id="rdiff-1"></span>
+              </div>
+              <div class="reg-row" id="rrow-2">
+                <span class="rname">R2</span>
+                <span class="rval" id="rval-2">0x0000</span>
+                <span class="rdec" id="rdec-2">0</span>
+                <span class="rdiff" id="rdiff-2"></span>
+              </div>
+              <div class="reg-row" id="rrow-3">
+                <span class="rname">R3</span>
+                <span class="rval" id="rval-3">0x0000</span>
+                <span class="rdec" id="rdec-3">0</span>
+                <span class="rdiff" id="rdiff-3"></span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Special -->
-        <div class="cpu-group">
-          <div class="cg-label">Special</div>
-          <div class="reg-table">
-            <div class="reg-row">
-              <span class="rname rname-sp">PC</span>
-              <span class="rval rval-addr" id="sv-pc">0x0000</span>
-            </div>
-            <div class="reg-row">
-              <span class="rname rname-sp">SP</span>
-              <span class="rval rval-addr" id="sv-sp">0x0000</span>
+          <!-- Special -->
+          <div class="cpu-group">
+            <div class="cg-label">Special</div>
+            <div class="reg-table">
+              <div class="reg-row">
+                <span class="rname rname-sp">PC</span>
+                <span class="rval rval-addr" id="sv-pc">0x0000</span>
+              </div>
+              <div class="reg-row">
+                <span class="rname rname-sp">SP</span>
+                <span class="rval rval-addr" id="sv-sp">0x0000</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Flags -->
-        <div class="cpu-group">
-          <div class="cg-label">Flags</div>
-          <div class="flags-strip">
-            <div class="flag" id="fl-Z"><div class="fl-led"></div><div class="fl-name">Z</div><div class="fl-desc">Zero</div></div>
-            <div class="flag" id="fl-N"><div class="fl-led"></div><div class="fl-name">N</div><div class="fl-desc">Neg</div></div>
-            <div class="flag" id="fl-C"><div class="fl-led"></div><div class="fl-name">C</div><div class="fl-desc">Carry</div></div>
-            <div class="flag" id="fl-V"><div class="fl-led"></div><div class="fl-name">V</div><div class="fl-desc">Over</div></div>
-          </div>
-        </div>
-
-        <!-- Current instruction -->
-        <div class="cpu-group">
-          <div class="cg-label">Instruction</div>
-          <div class="instr-card">
-            <div class="ic-op" id="ic-op">—</div>
-            <div class="ic-fields">
-              <span class="ic-field" id="icf-mode">mode: —</span>
-              <span class="ic-field" id="icf-dst">dst: —</span>
-              <span class="ic-field" id="icf-src">src: —</span>
+          <!-- Flags -->
+          <div class="cpu-group">
+            <div class="cg-label">Flags</div>
+            <div class="flags-strip">
+              <div class="flag" id="fl-Z"><div class="fl-led"></div><div class="fl-name">Z</div><div class="fl-desc">Zero</div></div>
+              <div class="flag" id="fl-N"><div class="fl-led"></div><div class="fl-name">N</div><div class="fl-desc">Neg</div></div>
+              <div class="flag" id="fl-C"><div class="fl-led"></div><div class="fl-name">C</div><div class="fl-desc">Carry</div></div>
+              <div class="flag" id="fl-V"><div class="fl-led"></div><div class="fl-name">V</div><div class="fl-desc">Over</div></div>
             </div>
-            <div class="ic-raw" id="ic-raw">0x0000</div>
           </div>
-        </div>
 
-      </div>
+          <!-- Current instruction -->
+          <div class="cpu-group">
+            <div class="cg-label">Instruction</div>
+            <div class="instr-card">
+              <div class="ic-op" id="ic-op">—</div>
+              <div class="ic-fields">
+                <span class="ic-field" id="icf-mode">mode: —</span>
+                <span class="ic-field" id="icf-dst">dst: —</span>
+                <span class="ic-field" id="icf-src">src: —</span>
+              </div>
+              <div class="ic-raw" id="ic-raw">0x0000</div>
+            </div>
+          </div>
+
+        </div><!-- /.cpu-inner -->
+      </div><!-- /.panel-scroll -->
     </section>
 
     <!-- RIGHT: Execution log -->
     <section class="panel" id="panel-log">
       <div class="panel-hdr">
         <span class="phdr-title">EXECUTION LOG</span>
-        <input id="jump-input" class="jump-input" type="number"
-               placeholder="jump to cycle…" min="1">
+        <div class="log-hdr-controls">
+          <input id="search-input" class="search-input" type="text" placeholder="filter…">
+          <input id="jump-input" class="jump-input" type="number"
+                 placeholder="jump to cycle…" min="1">
+        </div>
       </div>
       <div class="panel-scroll" id="log-scroll">
         <div id="log-rows"></div>
@@ -195,32 +205,68 @@
 
   <!-- Controls bar -->
   <div id="controls">
-    <div class="ctl-nav">
-      <button class="nav-btn" id="btn-first" title="First (Home)">&#x23EE;</button>
-      <button class="nav-btn" id="btn-prev"  title="Prev (←)">&#x25C0;</button>
-      <button class="nav-btn" id="btn-next"  title="Next (→)">&#x25B6;</button>
-      <button class="nav-btn" id="btn-last"  title="Last (End)">&#x23ED;</button>
+    <div class="ctl-left">
+      <div class="ctl-nav">
+        <button class="nav-btn" id="btn-first" title="First (Home)">&#x23EE;</button>
+        <button class="nav-btn" id="btn-prev"  title="Prev (←)">&#x25C0;</button>
+        <button class="nav-btn nav-play" id="btn-play" title="Play/Pause (Space)">&#x25B6;</button>
+        <button class="nav-btn" id="btn-next"  title="Next (→)">&#x25B7;</button>
+        <button class="nav-btn" id="btn-last"  title="Last (End)">&#x23ED;</button>
+      </div>
+      <select id="speed-select" class="speed-select" title="Playback speed">
+        <option value="600">0.5&#xD7;</option>
+        <option value="250" selected>1&#xD7;</option>
+        <option value="100">2&#xD7;</option>
+        <option value="40">4&#xD7;</option>
+        <option value="16">Max</option>
+      </select>
+      <input type="range" id="cycle-slider" class="cycle-slider" min="0" value="0">
     </div>
-    <div class="ctl-pos" id="ctl-pos">cycle 1 / —</div>
-    <div class="ctl-legend">
-      <span class="leg" style="--lc:#3b82f6">data</span>
-      <span class="leg" style="--lc:#10b981">arith</span>
-      <span class="leg" style="--lc:#8b5cf6">logic</span>
-      <span class="leg" style="--lc:#eab308">cmp</span>
-      <span class="leg" style="--lc:#f59e0b">jump</span>
-      <span class="leg" style="--lc:#ef4444">call</span>
-      <span class="leg" style="--lc:#06b6d4">i/o</span>
-      <span class="leg" style="--lc:#6b7280">sys</span>
+    <div class="ctl-right">
+      <div class="ctl-pos" id="ctl-pos">cycle 1 / —</div>
+      <div class="ctl-legend">
+        <span class="leg" style="--lc:#3b82f6">data</span>
+        <span class="leg" style="--lc:#10b981">arith</span>
+        <span class="leg" style="--lc:#8b5cf6">logic</span>
+        <span class="leg" style="--lc:#eab308">cmp</span>
+        <span class="leg" style="--lc:#f59e0b">jump</span>
+        <span class="leg" style="--lc:#ef4444">call</span>
+        <span class="leg" style="--lc:#06b6d4">i/o</span>
+        <span class="leg" style="--lc:#6b7280">sys</span>
+      </div>
+      <div class="ctl-keys">&#x2190; &#x2192; &nbsp;&#xB7;&nbsp; Home / End &nbsp;&#xB7;&nbsp; Space &nbsp;&#xB7;&nbsp; click timeline</div>
+      <button id="btn-keys" class="keys-btn" title="Keyboard shortcuts (?)">?</button>
     </div>
-    <div class="ctl-keys">← → &nbsp;·&nbsp; Home / End &nbsp;·&nbsp; click timeline</div>
   </div>
 
   <!-- Timeline -->
   <div id="timeline-wrap">
     <canvas id="timeline-canvas"></canvas>
+    <div id="tl-tooltip" class="tl-tooltip"></div>
   </div>
 
 </div><!-- /#viewer -->
+
+<!-- Keyboard shortcuts overlay -->
+<div id="keys-overlay" class="keys-overlay" hidden>
+  <div class="keys-card">
+    <div class="keys-hdr">
+      <span class="keys-title">Keyboard Shortcuts</span>
+      <button id="btn-keys-close" class="keys-close">&#x2715;</button>
+    </div>
+    <div class="keys-grid">
+      <kbd>&#x2190;</kbd><span>Previous cycle</span>
+      <kbd>&#x2192;</kbd><span>Next cycle</span>
+      <kbd>Space</kbd><span>Play / Pause</span>
+      <kbd>Home</kbd><span>First cycle</span>
+      <kbd>End</kbd><span>Last cycle</span>
+      <kbd>F</kbd><span>Focus filter</span>
+      <kbd>G</kbd><span>Focus jump</span>
+      <kbd>?</kbd><span>This overlay</span>
+      <kbd>Esc</kbd><span>Close / blur</span>
+    </div>
+  </div>
+</div>
 
 <script src="viewer.js"></script>
 </body>
