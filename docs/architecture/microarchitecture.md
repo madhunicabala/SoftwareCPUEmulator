@@ -15,7 +15,7 @@ Emu16 is a 16-bit software-emulated CPU with a fixed-width 2-byte (16-bit) instr
 | **MDR** | 16-bit | — | Memory Data Register — holds data returned from (or sent to) memory |
 | **IR** | 16-bit | — | Instruction Register — holds the currently executing instruction word |
 | **SP** | 16-bit | `0x1FFF` | Stack Pointer — grows downward toward `0x1000` |
-| **FLAGS** | 3-bit | `0b000` | Status flags: Z (zero), N (negative/less), C (carry) |
+| **FLAGS** | 4-bit | `0b0000` | Status flags: Z (zero), N (negative/less), C (carry), V (overflow) |
 | **R0–R3** | 16-bit | `0` | General-purpose registers (calling convention: R0=arg1/ret, R1=arg2, R2=arg3, R3=frame ptr) |
 
 ---
@@ -101,6 +101,7 @@ For MMIO (`IN`/`OUT`), the execute stage intercepts addresses in `0xF000–0xF0F
 | 0 | **Z** (Zero) | Result == 0 |
 | 1 | **N** (Negative / Less) | Result < 0 (MSB set) or CMP dst < src |
 | 2 | **C** (Carry) | Unsigned overflow on ADD/SUB |
+| 3 | **V** (Overflow) | Signed overflow on ADD/SUB |
 
 Branch instructions that test flags: `JZ`, `JNZ`, `JL`, `JGE`, `JC`.
 
