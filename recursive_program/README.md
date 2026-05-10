@@ -209,7 +209,7 @@ _start:  HALT  →  R0 = 120
 
 [▶ Watch Demo on Google Drive](https://drive.google.com/file/d/1QtM5ycDp4ezod9oRnGZtgOsxTnU_7PVH/view?usp=drive_link)
 
-[▶ Watch Demo on Google Drive Trace UI](https://drive.google.com/file/d/121Pi8Xcb9jovxqc8-nhqzrfyZmqJYzw7/view?usp=drive_link)
+[▶ Watch Demo on Google Drive Trace UI](https://drive.google.com/file/d/1sHHrDjlJRaixZNzCgJBDUQW9UPm8qGX5/view?usp=drive_link)
 
 
 ## Trace Viewer
