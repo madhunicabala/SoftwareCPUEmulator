@@ -534,6 +534,8 @@ Hello, Emu16!
 ## Demo Video — Fibonacci
 [▶ Watch Demo on Google Drive](https://drive.google.com/file/d/1QtM5ycDp4ezod9oRnGZtgOsxTnU_7PVH/view?usp=drive_link) 
 
+[▶ Watch Demo on Google Drive for Trace UI](https://drive.google.com/file/d/1-THs-KuulF257t508s8fyGez7ulHSI3i/view?usp=drive_link) 
+
 ## Team
 
 | Member | Contribution |
