@@ -6,6 +6,10 @@ let _map      = null; // parsed map.json or null
 let _idx      = 0;    // current cycle index (0-based)
 let _pcToLine = {};   // "0x2000" → index into _map.lines
 
+let _playing   = false;
+let _playTimer = null;
+let _filter    = '';
+
 /* ── Opcode category colours ─────────────────────────────────────────── */
 const CAT_COLOR = {
   data:  '#3b82f6',
@@ -43,6 +47,53 @@ function hex16(n) {
 
 function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+/* ── Playback ────────────────────────────────────────────────────────── */
+function startPlay() {
+  if (_playing) return;
+  if (_idx >= _trace.length - 1) goTo(0); // wrap if at end
+  _playing = true;
+  const btn = $('btn-play');
+  btn.textContent = '⏸';
+  btn.classList.add('playing');
+  const ms = parseInt($('speed-select').value, 10);
+  _playTimer = setInterval(() => {
+    if (_idx >= _trace.length - 1) {
+      stopPlay();
+      return;
+    }
+    goTo(_idx + 1);
+  }, ms);
+}
+
+function stopPlay() {
+  if (!_playing) return;
+  _playing = false;
+  clearInterval(_playTimer);
+  _playTimer = null;
+  const btn = $('btn-play');
+  btn.textContent = '▶';
+  btn.classList.remove('playing');
+}
+
+function togglePlay() {
+  if (_playing) stopPlay();
+  else startPlay();
+}
+
+/* ── Filter ──────────────────────────────────────────────────────────── */
+function applyFilter(q) {
+  _filter = q.trim().toLowerCase();
+  const rows = $('log-rows').children;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    if (!_filter || (row.dataset.op && row.dataset.op.includes(_filter))) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  }
 }
 
 /* ── File loading ────────────────────────────────────────────────────── */
@@ -123,6 +174,7 @@ function buildLog() {
     const row = document.createElement('div');
     row.className = 'log-row';
     row.dataset.idx = i;
+    row.dataset.op  = cy.op.toLowerCase();
     row.innerHTML =
       `<span class="log-cyc">${cy.cycle}</span>` +
       `<span class="log-op" style="color:${color}">${cy.op}</span>` +
@@ -148,6 +200,16 @@ function openViewer() {
     $('tb-src').textContent = _map.source.split('/').pop();
   }
 
+  // Initialise cycle slider range
+  const slider = $('cycle-slider');
+  slider.min   = 0;
+  slider.max   = _trace.length - 1;
+  slider.value = 0;
+
+  // Reset filter
+  $('search-input').value = '';
+  _filter = '';
+
   $('load-screen').hidden = true;
   $('viewer').hidden = false;
 
@@ -156,10 +218,46 @@ function openViewer() {
   drawTimeline();
 }
 
+/* ── Reset to load screen ────────────────────────────────────────────── */
+function resetToLoadScreen() {
+  stopPlay();
+
+  // Reset state
+  _trace    = [];
+  _map      = null;
+  _idx      = 0;
+  _pcToLine = {};
+  _filter   = '';
+
+  // Reset load-screen UI
+  $('status-trace').textContent = 'Drop file or click';
+  $('status-map').textContent   = 'Drop file or click';
+  $('zone-trace').classList.remove('loaded');
+  $('zone-map').classList.remove('loaded');
+  $('input-trace').value = '';
+  $('input-map').value   = '';
+  updateOpenBtn();
+
+  // Clear viewer DOM
+  $('source-lines').innerHTML = '';
+  $('log-rows').innerHTML     = '';
+  $('search-input').value     = '';
+  $('jump-input').value       = '';
+
+  // Switch screens
+  $('viewer').hidden      = true;
+  $('load-screen').hidden = false;
+
+  // Close keys overlay if open
+  $('keys-overlay').hidden = true;
+}
+
 /* ── Navigation ──────────────────────────────────────────────────────── */
 function goTo(n) {
   const prev = _idx;
   _idx = Math.max(0, Math.min(_trace.length - 1, n));
+  // Sync slider
+  $('cycle-slider').value = _idx;
   render(prev);
 }
 
@@ -178,9 +276,9 @@ function render(prevIdx) {
 }
 
 function renderTopbar(cur) {
-  $('tb-op').textContent  = cur.op;
-  $('tb-op').style.color  = opColor(cur.op);
-  $('tb-pc').textContent  = cur.pc;
+  $('tb-op').textContent   = cur.op;
+  $('tb-op').style.color   = opColor(cur.op);
+  $('tb-pc').textContent   = cur.pc;
   $('tb-cnum').textContent = cur.cycle;
 }
 
@@ -208,14 +306,27 @@ function renderCPU(cur, prv) {
     $(`rval-${i}`).textContent = hex16(val);
     $(`rdec-${i}`).textContent = val;
 
-    const row = $(`rrow-${i}`);
+    const row     = $(`rrow-${i}`);
+    const rdiff   = $(`rdiff-${i}`);
     const changed = prv && prv.reg[i] !== val;
+
     if (changed) {
       row.classList.remove('changed');
       void row.offsetWidth;   // retrigger CSS animation
       row.classList.add('changed');
+
+      const delta = val - prv.reg[i];
+      if (delta > 0) {
+        rdiff.textContent = `+${delta}`;
+        rdiff.className   = 'rdiff rdiff-pos';
+      } else {
+        rdiff.textContent = `${delta}`;
+        rdiff.className   = 'rdiff rdiff-neg';
+      }
     } else {
       row.classList.remove('changed');
+      rdiff.textContent = '';
+      rdiff.className   = 'rdiff';
     }
   }
 
@@ -248,7 +359,10 @@ function renderLog() {
   if (!row) return;
 
   row.classList.add('active');
-  row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  // Only scroll into view if the row is not filtered out
+  if (row.style.display !== 'none') {
+    row.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 }
 
 /* ── Timeline ────────────────────────────────────────────────────────── */
@@ -267,7 +381,7 @@ function drawTimeline() {
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 
-  const n    = _trace.length;
+  const n = _trace.length;
   if (n === 0) return;
 
   const barW = W / n;
@@ -340,17 +454,30 @@ $('btn-prev') .addEventListener('click', () => goTo(_idx - 1));
 $('btn-next') .addEventListener('click', () => goTo(_idx + 1));
 $('btn-last') .addEventListener('click', () => goTo(_trace.length - 1));
 
-document.addEventListener('keydown', e => {
-  if ($('viewer').hidden) return;
-  if (e.target.tagName === 'INPUT') return;
-  switch (e.key) {
-    case 'ArrowLeft':  goTo(_idx - 1);            e.preventDefault(); break;
-    case 'ArrowRight': goTo(_idx + 1);            e.preventDefault(); break;
-    case 'Home':       goTo(0);                   e.preventDefault(); break;
-    case 'End':        goTo(_trace.length - 1);   e.preventDefault(); break;
+$('btn-play').addEventListener('click', togglePlay);
+
+$('btn-reload').addEventListener('click', resetToLoadScreen);
+
+/* ── Cycle slider ────────────────────────────────────────────────────── */
+$('cycle-slider').addEventListener('input', e => {
+  stopPlay();
+  goTo(parseInt(e.target.value, 10));
+});
+
+/* ── Speed selector ──────────────────────────────────────────────────── */
+$('speed-select').addEventListener('change', () => {
+  if (_playing) {
+    stopPlay();
+    startPlay();
   }
 });
 
+/* ── Search / filter ─────────────────────────────────────────────────── */
+$('search-input').addEventListener('input', e => {
+  applyFilter(e.target.value);
+});
+
+/* ── Jump input ──────────────────────────────────────────────────────── */
 $('jump-input').addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   const n = parseInt($('jump-input').value, 10);
@@ -359,10 +486,113 @@ $('jump-input').addEventListener('keydown', e => {
   $('jump-input').blur();
 });
 
+/* ── Keys overlay ────────────────────────────────────────────────────── */
+$('btn-keys').addEventListener('click', () => {
+  $('keys-overlay').hidden = false;
+});
+
+$('btn-keys-close').addEventListener('click', () => {
+  $('keys-overlay').hidden = true;
+});
+
+$('keys-overlay').addEventListener('click', e => {
+  if (e.target === $('keys-overlay')) {
+    $('keys-overlay').hidden = true;
+  }
+});
+
+/* ── Timeline interactions ───────────────────────────────────────────── */
 $('timeline-canvas').addEventListener('click', e => {
   const rect = $('timeline-canvas').getBoundingClientRect();
   const frac = (e.clientX - rect.left) / rect.width;
   goTo(Math.floor(frac * _trace.length));
+});
+
+$('timeline-canvas').addEventListener('mousemove', e => {
+  if (_trace.length === 0) return;
+  const rect    = $('timeline-canvas').getBoundingClientRect();
+  const frac    = (e.clientX - rect.left) / rect.width;
+  const hoverIdx = Math.min(Math.floor(frac * _trace.length), _trace.length - 1);
+  const cy      = _trace[hoverIdx];
+  const tooltip = $('tl-tooltip');
+  tooltip.textContent    = `cycle ${cy.cycle}  ${cy.op} @ ${cy.pc}`;
+  tooltip.style.display  = 'block';
+  // Position tooltip so it stays within the wrap
+  const wrapW   = rect.width;
+  let left      = e.clientX - rect.left;
+  const tipW    = tooltip.offsetWidth;
+  if (left + tipW > wrapW) left = wrapW - tipW - 4;
+  if (left < 0) left = 0;
+  tooltip.style.left = left + 'px';
+});
+
+$('timeline-canvas').addEventListener('mouseleave', () => {
+  $('tl-tooltip').style.display = 'none';
+});
+
+/* ── Keyboard shortcuts ──────────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if ($('viewer').hidden) return;
+
+  const overlay = $('keys-overlay');
+  const inInput = e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT';
+
+  // If overlay is visible, only Esc closes it
+  if (!overlay.hidden) {
+    if (e.key === 'Escape') {
+      overlay.hidden = true;
+      e.preventDefault();
+    }
+    return;
+  }
+
+  // If focus is in an input, only handle Esc (blur)
+  if (inInput) {
+    if (e.key === 'Escape') {
+      e.target.blur();
+      e.preventDefault();
+    }
+    return;
+  }
+
+  switch (e.key) {
+    case 'ArrowLeft':
+      goTo(_idx - 1);
+      e.preventDefault();
+      break;
+    case 'ArrowRight':
+      goTo(_idx + 1);
+      e.preventDefault();
+      break;
+    case 'Home':
+      goTo(0);
+      e.preventDefault();
+      break;
+    case 'End':
+      goTo(_trace.length - 1);
+      e.preventDefault();
+      break;
+    case ' ':
+      togglePlay();
+      e.preventDefault();
+      break;
+    case 'f':
+    case 'F':
+      $('search-input').focus();
+      $('search-input').select();
+      e.preventDefault();
+      break;
+    case 'g':
+    case 'G':
+      $('jump-input').focus();
+      $('jump-input').select();
+      e.preventDefault();
+      break;
+    case '?':
+      overlay.hidden = false;
+      e.preventDefault();
+      break;
+  }
 });
 
 window.addEventListener('resize', () => {
